@@ -562,17 +562,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d905e9b97ad87d4a8e04a086e2f4659, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  vrCamera: {fileID: 1373153108}
-  realWorldOrigin: {fileID: 0}
-  virtualOrigin: {fileID: 0}
-  baseTranslationGain: 1
-  baseRotationGain: 1
-  curvatureGain: 0
+  camera: {fileID: 1373153108}
+  virtualWorld: {fileID: 1783572214}
+  lookingAtCenterAngleThreshold: 10
   maxExtraTranslationGain: 0.25
-  maxExtraRotationGain: 0.2
-  physicalRadius: 2.5
-  safeRadius: 1
-  steerStrength: 1
+  minExtraTranslationGain: 0.14
+  extraStillRotationGain: 0.05
+  maxExtraRotationGain: 0.49
+  minExtraRotationGain: 0.2
+  minCurvatureGainRadius: 22
 --- !u!4 &941582946 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3283785463155816736, guid: e912fbd5396dace4dbdffbc8b79a6c14, type: 3}
