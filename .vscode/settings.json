@@ -66,5 +66,5 @@
     "explorer.fileNesting.patterns": {
         "*.sln": "*.csproj"
     },
-    "dotnet.defaultSolution": "VendeuR Ambulant Redirigé.sln"
+    "dotnet.defaultSolution": "VendeuR Ambulant Redirige.sln"
 }

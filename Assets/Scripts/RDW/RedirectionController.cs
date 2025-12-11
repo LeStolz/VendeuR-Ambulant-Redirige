@@ -16,7 +16,7 @@ public class RedirectionController : MonoBehaviour
     [SerializeField] float minExtraTranslationGain = 0.14f;
 
     [Header("Rotation Gain")]
-    [SerializeField] float extraStillRotationGain = 0.05f;
+    [SerializeField] float extraStillRotationGain = 0.01f;
     [SerializeField] float maxExtraRotationGain = 0.49f;
     [SerializeField] float minExtraRotationGain = 0.2f;
 

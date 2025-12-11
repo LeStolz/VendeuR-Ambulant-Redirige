@@ -567,7 +567,7 @@ MonoBehaviour:
   lookingAtCenterAngleThreshold: 10
   maxExtraTranslationGain: 0.25
   minExtraTranslationGain: 0.14
-  extraStillRotationGain: 0.05
+  extraStillRotationGain: 0.01
   maxExtraRotationGain: 0.49
   minExtraRotationGain: 0.2
   minCurvatureGainRadius: 22
