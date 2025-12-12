@@ -23,10 +23,17 @@ public class RedirectionController : MonoBehaviour
     [Header("Curvature Gain")]
     [SerializeField] float minCurvatureGainRadius = 22f;
 
+    [Header("Reset")]
+    private bool isResetting = false;
+    private float resetYaw = 0f;
+    private float startVirtualYaw = 0f;
+    private float startVirtualWorldYaw = 0f;
+
     PhysicalBoundaryManager physicalBoundaryManager;
     Vector3 RealWorldOrigin => physicalBoundaryManager.BoundaryCenter;
     float RealWorldRadius => physicalBoundaryManager.BoundaryRadius;
     float SafeRealWorldRadius => RealWorldRadius * 0.2f;
+    float DangerRealWorldRadius => RealWorldRadius * 0.8f;
 
     Vector3 prevLocalPos;
     float prevLocalRot;
@@ -48,14 +55,30 @@ public class RedirectionController : MonoBehaviour
         float centerYaw = SignedAngleOnXZ(Vector3.forward, toCenter);
         float distToCenter = Vector2.Distance(camPos, center);
         float yawToRotate = Mathf.DeltaAngle(camera.eulerAngles.y, centerYaw);
+        Debug.Log("yawToRotate: " + yawToRotate);
 
-        float translationGain = ComputeTranslationGain(toCenter, distToCenter);
-        float rotationGain = ComputeRotationGain(distToCenter, prevYawToRotate, yawToRotate);
-        float curvatureGain = ComputeStillAndCurvatureGain(yawToRotate);
-        ApplyTranslationGain(translationGain);
-        ApplyRotationGain(rotationGain);
 
-        ApplyStillAndCurvatureGain(curvatureGain);
+        if (!isResetting)
+        {
+            if (distToCenter >= DangerRealWorldRadius)
+            {
+                StartReset();
+            }
+            else
+            {
+                float translationGain = ComputeTranslationGain(toCenter, distToCenter);
+                float rotationGain = ComputeRotationGain(distToCenter, prevYawToRotate, yawToRotate);
+                float curvatureGain = ComputeStillAndCurvatureGain(yawToRotate);
+                ApplyTranslationGain(translationGain);
+                ApplyRotationGain(rotationGain);
+
+                ApplyStillAndCurvatureGain(curvatureGain);
+            }
+        }
+        else
+        {
+            ApplyResetYaw();
+        }
 
         prevLocalPos = camera.localPosition;
         prevLocalRot = camera.eulerAngles.y;
@@ -138,5 +161,44 @@ public class RedirectionController : MonoBehaviour
     {
         a.y = 0; b.y = 0;
         return Vector3.SignedAngle(a, b, Vector3.up);
+    }
+
+    private void StartReset()
+    {
+        isResetting = true;
+
+        // hiện pop up
+        Debug.Log("Starting Reset");
+
+        startVirtualYaw = camera.eulerAngles.y;
+        startVirtualWorldYaw = virtualWorld.eulerAngles.y;
+        resetYaw = camera.eulerAngles.y + 180;
+    }
+
+    private void ApplyResetYaw()
+    {
+        if (Mathf.Abs(Mathf.DeltaAngle(camera.eulerAngles.y, resetYaw)) < 0.5f)
+        {
+            isResetting = false;
+            Debug.Log("Finished Reset");
+            return;
+        }
+
+        // float veOriy = (camera.eulerAngles.y - prevLocalRot) * 2f;
+        // virtualWorld.RotateAround(camera.position, Vector3.up, veOriy);
+
+        float virtualDeltaYaw = (camera.eulerAngles.y - startVirtualYaw);
+
+        virtualWorld.RotateAround(
+            camera.position, Vector3.up, -virtualWorld.eulerAngles.y + (virtualDeltaYaw + startVirtualWorldYaw)
+        );
+        // 90 , 180 - 90 + 90 = 180, 270
+        // 270, 360 - 270 + 90 = 180, 450
+        /*
+        
+        x = x + h => x = x + y - x = y
+        h = y - x
+
+        */
     }
 }
