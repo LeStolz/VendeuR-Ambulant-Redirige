@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 [RequireComponent(typeof(PhysicalBoundaryManager))]
@@ -8,15 +7,13 @@ public class RedirectionController : MonoBehaviour
     [SerializeField] new Transform camera;
     [SerializeField] Transform virtualWorld;
 
-    [Header("General Gains")]
-    [SerializeField] float lookingAtCenterAngleThreshold = 10f;
-
     [Header("Translation Gain")]
+    [SerializeField] float headingToCenterDotThreshold = 0.5f;
     [SerializeField] float maxExtraTranslationGain = 0.26f;
     [SerializeField] float minExtraTranslationGain = 0.14f;
 
     [Header("Rotation Gain")]
-    [SerializeField] float extraStillRotationGain = 0.01f;
+    [SerializeField] float extraStillRotationGain = 0.005f;
     [SerializeField] float maxExtraRotationGain = 0.49f;
     [SerializeField] float minExtraRotationGain = 0.2f;
 
@@ -28,51 +25,56 @@ public class RedirectionController : MonoBehaviour
     float RealWorldRadius => physicalBoundaryManager.BoundaryRadius;
     float SafeRealWorldRadius => RealWorldRadius * 0.2f;
 
-    Vector3 prevLocalPos;
-    float prevLocalRot;
-    float prevYawToRotate;
+    Vector3 prevPos;
+    float prevYaw;
+    float prevYawToRotateToFaceCenter;
 
     void Start()
     {
         physicalBoundaryManager = GetComponent<PhysicalBoundaryManager>();
 
-        prevLocalPos = camera.localPosition;
-        prevLocalRot = camera.eulerAngles.y;
+        prevPos = camera.position;
+        prevYaw = camera.eulerAngles.y;
     }
 
     void Update()
     {
-        Vector2 camPos = new(camera.position.x, camera.position.z);
-        Vector2 center = new(RealWorldOrigin.x, RealWorldOrigin.z);
-        Vector3 toCenter = (RealWorldOrigin - camera.position).normalized;
+        Vector3 camPos = new(camera.position.x, 0, camera.position.z);
+        Vector3 center = new(RealWorldOrigin.x, 0, RealWorldOrigin.z);
+        Vector3 toCenter = (center - camPos).normalized;
         float centerYaw = SignedAngleOnXZ(Vector3.forward, toCenter);
-        float distToCenter = Vector2.Distance(camPos, center);
-        float yawToRotate = Mathf.DeltaAngle(camera.eulerAngles.y, centerYaw);
+        float distToCenter = Vector3.Distance(camPos, center);
+        float yawToRotateToFaceCenter = Mathf.DeltaAngle(camera.eulerAngles.y, centerYaw);
 
         float translationGain = ComputeTranslationGain(toCenter, distToCenter);
-        float rotationGain = ComputeRotationGain(distToCenter, prevYawToRotate, yawToRotate);
-        float curvatureGain = ComputeStillAndCurvatureGain(yawToRotate);
+        float rotationGain = ComputeRotationGain(distToCenter, prevYawToRotateToFaceCenter, yawToRotateToFaceCenter);
+        float curvatureGain = ComputeStillAndCurvatureGain(yawToRotateToFaceCenter);
+
         ApplyTranslationGain(translationGain);
         ApplyRotationGain(rotationGain);
-
         ApplyStillAndCurvatureGain(curvatureGain);
 
-        prevLocalPos = camera.localPosition;
-        prevLocalRot = camera.eulerAngles.y;
-        prevYawToRotate = yawToRotate;
+        prevPos = camera.position;
+        prevYaw = camera.eulerAngles.y;
+        prevYawToRotateToFaceCenter = yawToRotateToFaceCenter;
     }
 
     float ComputeTranslationGain(Vector3 toCenter, float distToCenter)
     {
-        Vector3 translation = camera.localPosition - prevLocalPos;
+        Vector3 translation = camera.position - prevPos;
+        translation.y = 0;
+
+        if (translation.magnitude < GlobalThresholds.EPS)
+            return 1;
+
         float headingToCenter = Vector3.Dot(translation.normalized, toCenter);
 
         float extraGain;
-        if (distToCenter <= SafeRealWorldRadius && headingToCenter > 0)
+        if (distToCenter <= SafeRealWorldRadius && headingToCenter > headingToCenterDotThreshold)
         {
             extraGain = -minExtraTranslationGain;
         }
-        else if (distToCenter >= SafeRealWorldRadius && headingToCenter > 0)
+        else if (distToCenter >= SafeRealWorldRadius && headingToCenter > headingToCenterDotThreshold)
         {
             extraGain = 0;
         }
@@ -81,7 +83,7 @@ public class RedirectionController : MonoBehaviour
             extraGain = maxExtraTranslationGain;
         }
 
-        extraGain = Mathf.Abs(headingToCenter) * extraGain;
+        extraGain = Mathf.Max(Mathf.Abs(headingToCenter), headingToCenterDotThreshold) * extraGain;
         extraGain *= Mathf.InverseLerp(0, RealWorldRadius, distToCenter);
 
         return 1 + extraGain;
@@ -89,17 +91,19 @@ public class RedirectionController : MonoBehaviour
 
     void ApplyTranslationGain(float gain)
     {
-        Vector3 delta = camera.localPosition - prevLocalPos;
+        Vector3 delta = camera.position - prevPos;
+        delta.y = 0;
         Vector3 modified = delta * gain;
 
         virtualWorld.position -= modified - delta;
     }
 
-    float ComputeRotationGain(float distToCenter, float prevYawToRotate, float yawToRotate)
+    float ComputeRotationGain(float distToCenter, float prevYawToRotateToGetToCenter, float yawToRotateToFaceCenter)
     {
-        if (Mathf.Abs(yawToRotate) < lookingAtCenterAngleThreshold) return 1;
+        float rotation = Mathf.Abs(yawToRotateToFaceCenter) - Mathf.Abs(prevYawToRotateToGetToCenter);
 
-        float rotation = Mathf.Abs(yawToRotate) - Mathf.Abs(prevYawToRotate);
+        if (Mathf.Abs(rotation) < GlobalThresholds.EPS)
+            return 1;
 
         float extraGain = (rotation > 0) ? -minExtraRotationGain : maxExtraRotationGain;
 
@@ -111,7 +115,7 @@ public class RedirectionController : MonoBehaviour
     void ApplyRotationGain(float gain)
     {
         float yaw = camera.eulerAngles.y;
-        float deltaYaw = Mathf.DeltaAngle(prevLocalRot, yaw);
+        float deltaYaw = Mathf.DeltaAngle(prevYaw, yaw);
         float modified = deltaYaw * gain;
 
         virtualWorld.RotateAround(camera.position, Vector3.up, modified - deltaYaw);
@@ -119,10 +123,8 @@ public class RedirectionController : MonoBehaviour
 
     float ComputeStillAndCurvatureGain(float yawToRotate)
     {
-        if (Mathf.Abs(yawToRotate) < lookingAtCenterAngleThreshold) return 0;
-
         float curvatureGain = 1 / minCurvatureGainRadius;
-        float speed = (camera.localPosition - prevLocalPos).magnitude;
+        float speed = (camera.position - prevPos).magnitude;
         curvatureGain = Mathf.Sign(yawToRotate) * curvatureGain * speed * Mathf.Rad2Deg;
         float stillGain = Mathf.Sign(yawToRotate) * extraStillRotationGain * Mathf.Rad2Deg * Time.deltaTime;
 

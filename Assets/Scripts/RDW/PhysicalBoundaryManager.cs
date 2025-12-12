@@ -9,8 +9,7 @@ using UnityEngine.XR.OpenXR.Features.Meta;
 [RequireComponent(typeof(PhysicalBoundaryVisibilityManager))]
 public class PhysicalBoundaryManager : MonoBehaviour
 {
-    [SerializeField] InputActionReference leftInteractionSelect;
-    [SerializeField] InputActionReference rightInteractionSelect;
+    [SerializeField] InputActionReference placeInteraction;
     [SerializeField] InputActionReference restartInteraction;
     [SerializeField] InputActionReference finishInteraction;
 
@@ -48,16 +47,14 @@ public class PhysicalBoundaryManager : MonoBehaviour
             FindObjectsInactive.Include, FindObjectsSortMode.None
         ).ToList();
 
-        leftInteractionSelect.action.performed += PlacePoint;
-        rightInteractionSelect.action.performed += PlacePoint;
+        placeInteraction.action.performed += PlacePoint;
         restartInteraction.action.performed += RestartPlacement;
         finishInteraction.action.performed += FinishPlacement;
     }
 
     void OnDestroy()
     {
-        leftInteractionSelect.action.performed -= PlacePoint;
-        rightInteractionSelect.action.performed -= PlacePoint;
+        placeInteraction.action.performed -= PlacePoint;
         restartInteraction.action.performed -= RestartPlacement;
         finishInteraction.action.performed -= FinishPlacement;
     }
@@ -74,7 +71,8 @@ public class PhysicalBoundaryManager : MonoBehaviour
         );
         if (!Physics.Raycast(ray, out RaycastHit hit)) return;
 
-        BoundaryPoints[BoundaryPoints.Count - 1] = hit.point;
+        Vector3 placePos = new(hit.point.x, 0.1f, hit.point.z);
+        BoundaryPoints[BoundaryPoints.Count - 1] = placePos;
 
         PlaceBoundary();
 
@@ -100,7 +98,7 @@ public class PhysicalBoundaryManager : MonoBehaviour
 
         BoundaryCenter = BoundaryPoints.Aggregate(Vector3.zero, (acc, point) => acc + point) / BoundaryPoints.Count;
 
-        BoundaryRadius = 0f;
+        BoundaryRadius = float.MaxValue;
         for (int i = 0; i < BoundaryPoints.Count; i++)
         {
             Vector3 pointA = BoundaryPoints[i];
@@ -113,7 +111,7 @@ public class PhysicalBoundaryManager : MonoBehaviour
             Vector3 closestPoint = pointA + AtoCenterProjected;
             float dist = Vector3.Distance(BoundaryCenter, closestPoint);
 
-            BoundaryRadius = Mathf.Max(BoundaryRadius, dist);
+            BoundaryRadius = Mathf.Min(BoundaryRadius, dist);
         }
 
         lineRenderer.loop = true;
@@ -123,7 +121,6 @@ public class PhysicalBoundaryManager : MonoBehaviour
     {
         if (
             !isPlacing ||
-            ctx.ReadValue<float>() < GlobalThresholds.INTERACTION_ACTIVE_THRESHOLD ||
             timeSinceLastInteraction < (float)GlobalThresholds.INTERACTION_ACTIVE_DEBOUNCE.TotalSeconds
         ) return;
 
