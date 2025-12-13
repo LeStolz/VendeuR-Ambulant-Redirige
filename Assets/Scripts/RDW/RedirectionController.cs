@@ -1,3 +1,5 @@
+using System;
+using TMPro;
 using UnityEngine;
 
 [RequireComponent(typeof(PhysicalBoundaryManager))]
@@ -8,7 +10,7 @@ public class RedirectionController : MonoBehaviour
     [SerializeField] Transform virtualWorld;
 
     [Header("Translation Gain")]
-    [SerializeField] float headingToCenterDotThreshold = 0.5f;
+    [SerializeField] float headingToCenterDotThreshold = 0.45f;
     [SerializeField] float maxExtraTranslationGain = 0.26f;
     [SerializeField] float minExtraTranslationGain = 0.14f;
 
@@ -21,6 +23,8 @@ public class RedirectionController : MonoBehaviour
     [SerializeField] float minCurvatureGainRadius = 22f;
 
     [Header("Reset")]
+    [SerializeField] GameObject resetWarningUI;
+    [SerializeField] TMP_Text resetWarningAngleLeftUI;
     private bool isResetting = false;
     private float resetYaw = 0f;
     private float startVirtualYaw = 0f;
@@ -30,7 +34,7 @@ public class RedirectionController : MonoBehaviour
     Vector3 RealWorldOrigin => physicalBoundaryManager.BoundaryCenter;
     float RealWorldRadius => physicalBoundaryManager.BoundaryRadius;
     float SafeRealWorldRadius => RealWorldRadius * 0.2f;
-    float DangerRealWorldRadius => RealWorldRadius * 0.8f;
+    float DangerRealWorldRadius => RealWorldRadius * 0.9f;
 
     Vector3 prevPos;
     float prevYaw;
@@ -166,10 +170,14 @@ public class RedirectionController : MonoBehaviour
             return;
         }
 
-        if (distToCenter >= DangerRealWorldRadius && Mathf.Abs(headingToCenterDot) > headingToCenterDotThreshold)
+        Debug.Log(distToCenter + " " + DangerRealWorldRadius);
+
+        if (
+            distToCenter >= DangerRealWorldRadius &&
+            GlobalThresholds.EPS < Math.Abs(headingToCenterDot) &&
+            headingToCenterDot <= headingToCenterDotThreshold)
         {
             StartReset();
-            return;
         }
     }
 
@@ -177,7 +185,7 @@ public class RedirectionController : MonoBehaviour
     {
         isResetting = true;
 
-        Debug.LogWarning("Resetting Rotation");
+        resetWarningUI.SetActive(true);
 
         startVirtualYaw = camera.eulerAngles.y;
         startVirtualWorldYaw = virtualWorld.eulerAngles.y;
@@ -186,11 +194,13 @@ public class RedirectionController : MonoBehaviour
 
     private void ApplyResetYaw()
     {
-        if (Mathf.Abs(Mathf.DeltaAngle(camera.eulerAngles.y, resetYaw)) < GlobalThresholds.EPS)
+        var yawToRotate = Mathf.Abs(Mathf.DeltaAngle(camera.eulerAngles.y, resetYaw));
+
+        if (yawToRotate < GlobalThresholds.ANG_EPS)
         {
             isResetting = false;
 
-            Debug.LogWarning("Finished Reset");
+            resetWarningUI.SetActive(false);
 
             return;
         }
@@ -199,6 +209,8 @@ public class RedirectionController : MonoBehaviour
         // virtualWorld.RotateAround(camera.position, Vector3.up, veOriy);
 
         float virtualDeltaYaw = camera.eulerAngles.y - startVirtualYaw;
+
+        resetWarningAngleLeftUI.text = $"Please turn {(int)yawToRotate}°.";
 
         virtualWorld.RotateAround(
             camera.position, Vector3.up, -virtualWorld.eulerAngles.y + (virtualDeltaYaw + startVirtualWorldYaw)

@@ -10,8 +10,7 @@ using UnityEngine.XR.OpenXR.Features.Meta;
 public class PhysicalBoundaryManager : MonoBehaviour
 {
     [SerializeField] InputActionReference placeInteraction;
-    [SerializeField] InputActionReference restartInteraction;
-    [SerializeField] InputActionReference finishInteraction;
+    [SerializeField] InputActionReference restartFinishInteraction;
 
     PhysicalBoundaryVisibilityManager physicalBoundaryVisibilityManager;
 
@@ -48,15 +47,13 @@ public class PhysicalBoundaryManager : MonoBehaviour
         ).ToList();
 
         placeInteraction.action.performed += PlacePoint;
-        restartInteraction.action.performed += RestartPlacement;
-        finishInteraction.action.performed += FinishPlacement;
+        restartFinishInteraction.action.performed += RestartFinishPlacement;
     }
 
     void OnDestroy()
     {
         placeInteraction.action.performed -= PlacePoint;
-        restartInteraction.action.performed -= RestartPlacement;
-        finishInteraction.action.performed -= FinishPlacement;
+        restartFinishInteraction.action.performed -= RestartFinishPlacement;
     }
 
     void Update()
@@ -77,6 +74,18 @@ public class PhysicalBoundaryManager : MonoBehaviour
         PlaceBoundary();
 
         timeSinceLastInteraction += Time.deltaTime;
+    }
+
+    void RestartFinishPlacement(InputAction.CallbackContext ctx)
+    {
+        if (isPlacing)
+        {
+            FinishPlacement(ctx);
+        }
+        else
+        {
+            RestartPlacement(ctx);
+        }
     }
 
     void RestartPlacement(InputAction.CallbackContext ctx)
