@@ -26,15 +26,15 @@ public class RedirectionController : MonoBehaviour
     [SerializeField] GameObject resetWarningUI;
     [SerializeField] TMP_Text resetWarningAngleLeftUI;
     private bool isResetting = false;
-    private float resetYaw = 0f;
-    private float startVirtualYaw = 0f;
+    private float resetLocalYaw = 0f;
+    private float startVirtualLocalYaw = 0f;
     private float startVirtualWorldYaw = 0f;
 
     PhysicalBoundaryManager physicalBoundaryManager;
-    Vector3 RealWorldOrigin => physicalBoundaryManager.BoundaryCenter;
+    Vector3 RealWorldOrigin => physicalBoundaryManager.BoundaryCenter.position;
     float RealWorldRadius => physicalBoundaryManager.BoundaryRadius;
     float SafeRealWorldRadius => RealWorldRadius * 0.2f;
-    float DangerRealWorldRadius => RealWorldRadius * 0.9f;
+    float DangerRealWorldRadius => RealWorldRadius * 1f;
 
     Vector3 prevPos;
     float prevYaw;
@@ -52,25 +52,29 @@ public class RedirectionController : MonoBehaviour
     {
         Vector3 camPos = new(camera.position.x, 0, camera.position.z);
         Vector3 center = new(RealWorldOrigin.x, 0, RealWorldOrigin.z);
-        Vector3 toCenter = (center - camPos).normalized;
-        Vector3 translation = (camPos - new Vector3(prevPos.x, 0, prevPos.z)).normalized;
-        float headingToCenterDot = Vector3.Dot(translation, toCenter);
 
-        float centerYaw = SignedAngleOnXZ(Vector3.forward, toCenter);
+        Vector3 toCenter = (center - camPos).normalized;
         float distToCenter = Vector3.Distance(camPos, center);
+        float centerYaw = SignedAngleOnXZ(Vector3.forward, toCenter);
         float yawToRotateToFaceCenter = Mathf.DeltaAngle(camera.eulerAngles.y, centerYaw);
 
-        ResetRotation(distToCenter, headingToCenterDot);
+        Vector3 translationDelta = camPos - new Vector3(prevPos.x, 0, prevPos.z);
+        Vector3 translation = translationDelta.normalized;
+
+        float headingToCenterDot = Vector3.Dot(translation, toCenter);
+
+        ResetRotation(distToCenter, headingToCenterDot, translationDelta);
         if (isResetting)
         {
             UpdatePrevTransform(yawToRotateToFaceCenter);
             return;
         }
 
-        float translationGain = ComputeTranslationGain(translation, headingToCenterDot, distToCenter);
+        float translationGain = ComputeTranslationGain(translationDelta, headingToCenterDot, distToCenter);
         float rotationGain = ComputeRotationGain(distToCenter, prevYawToRotateToFaceCenter, yawToRotateToFaceCenter);
-        float curvatureGain = ComputeStillAndCurvatureGain(yawToRotateToFaceCenter);
-        ApplyTranslationGain(translationGain);
+        float curvatureGain = ComputeStillAndCurvatureGain(yawToRotateToFaceCenter, translationDelta);
+
+        ApplyTranslationGain(translationGain, translationDelta);
         ApplyRotationGain(rotationGain);
         ApplyStillAndCurvatureGain(curvatureGain);
 
@@ -87,12 +91,12 @@ public class RedirectionController : MonoBehaviour
     float ComputeTranslationGain(Vector3 translation, float headingToCenterDot, float distToCenter)
     {
         if (translation.magnitude < GlobalThresholds.EPS)
-            return 1;
+            return 0;
 
         float extraGain;
         if (distToCenter <= SafeRealWorldRadius && headingToCenterDot > headingToCenterDotThreshold)
         {
-            extraGain = -minExtraTranslationGain;
+            extraGain = minExtraTranslationGain;
         }
         else if (distToCenter >= SafeRealWorldRadius && headingToCenterDot > headingToCenterDotThreshold)
         {
@@ -100,19 +104,17 @@ public class RedirectionController : MonoBehaviour
         }
         else
         {
-            extraGain = maxExtraTranslationGain;
+            extraGain = -maxExtraTranslationGain;
         }
 
         extraGain = Mathf.Max(Mathf.Abs(headingToCenterDot), headingToCenterDotThreshold) * extraGain;
         extraGain *= Mathf.InverseLerp(0, RealWorldRadius, distToCenter);
 
-        return 1 + extraGain;
+        return extraGain;
     }
 
-    void ApplyTranslationGain(float gain)
+    void ApplyTranslationGain(float gain, Vector3 delta)
     {
-        Vector3 delta = camera.position - prevPos;
-        delta.y = 0;
         Vector3 modified = delta * gain;
 
         virtualWorld.position -= modified - delta;
@@ -125,7 +127,7 @@ public class RedirectionController : MonoBehaviour
         if (Mathf.Abs(rotation) < GlobalThresholds.EPS)
             return 1;
 
-        float extraGain = (rotation > 0) ? -minExtraRotationGain : maxExtraRotationGain;
+        float extraGain = (rotation > 0) ? minExtraRotationGain : -maxExtraRotationGain;
 
         extraGain *= Mathf.InverseLerp(0, RealWorldRadius, distToCenter);
 
@@ -141,12 +143,21 @@ public class RedirectionController : MonoBehaviour
         virtualWorld.RotateAround(camera.position, Vector3.up, modified - deltaYaw);
     }
 
-    float ComputeStillAndCurvatureGain(float yawToRotate)
+    float ComputeStillAndCurvatureGain(float yawToRotate, Vector3 translationDelta)
     {
+        if (Mathf.Abs(yawToRotate) < GlobalThresholds.ANG_EPS)
+            return 0;
+
+        var direction =
+        0 < yawToRotate ||
+        yawToRotate >= 160 || yawToRotate <= -160 ? 1 : -1;
+
         float curvatureGain = 1 / minCurvatureGainRadius;
-        float speed = (camera.position - prevPos).magnitude;
-        curvatureGain = Mathf.Sign(yawToRotate) * curvatureGain * speed * Mathf.Rad2Deg;
-        float stillGain = Mathf.Sign(yawToRotate) * extraStillRotationGain * Mathf.Rad2Deg * Time.deltaTime;
+        float speed = translationDelta.magnitude;
+        curvatureGain = direction * -curvatureGain * speed * Mathf.Rad2Deg;
+        float stillGain = direction * -extraStillRotationGain * Mathf.Rad2Deg * Time.deltaTime;
+
+        Debug.Log(yawToRotate);
 
         return curvatureGain + stillGain;
     }
@@ -162,7 +173,7 @@ public class RedirectionController : MonoBehaviour
         return Vector3.SignedAngle(a, b, Vector3.up);
     }
 
-    void ResetRotation(float distToCenter, float headingToCenterDot)
+    void ResetRotation(float distToCenter, float headingToCenterDot, Vector3 translationDelta)
     {
         if (isResetting)
         {
@@ -170,10 +181,13 @@ public class RedirectionController : MonoBehaviour
             return;
         }
 
-        Debug.Log(distToCenter + " " + DangerRealWorldRadius);
-
         if (
             distToCenter >= DangerRealWorldRadius &&
+            (
+                translationDelta.magnitude > 5 * GlobalThresholds.EPS ||
+                translationDelta.magnitude > GlobalThresholds.EPS &&
+                Vector3.Dot(camera.forward, translationDelta.normalized) > GlobalThresholds.EPS
+            ) &&
             GlobalThresholds.EPS < Math.Abs(headingToCenterDot) &&
             headingToCenterDot <= headingToCenterDotThreshold)
         {
@@ -187,16 +201,16 @@ public class RedirectionController : MonoBehaviour
 
         resetWarningUI.SetActive(true);
 
-        startVirtualYaw = camera.eulerAngles.y;
+        startVirtualLocalYaw = camera.localEulerAngles.y;
         startVirtualWorldYaw = virtualWorld.eulerAngles.y;
-        resetYaw = camera.eulerAngles.y + 180;
+        resetLocalYaw = camera.localEulerAngles.y + 180f;
     }
 
     private void ApplyResetYaw()
     {
-        var yawToRotate = Mathf.Abs(Mathf.DeltaAngle(camera.eulerAngles.y, resetYaw));
+        var yawToRotate = Mathf.DeltaAngle(camera.localEulerAngles.y, resetLocalYaw);
 
-        if (yawToRotate < GlobalThresholds.ANG_EPS)
+        if (Mathf.Abs(yawToRotate) < GlobalThresholds.ANG_EPS)
         {
             isResetting = false;
 
@@ -205,10 +219,10 @@ public class RedirectionController : MonoBehaviour
             return;
         }
 
-        // float veOriy = (camera.eulerAngles.y - prevLocalRot) * 2f;
+        // float veOriy = (camera.localEulerAngles.y - prevLocalRot) * 2f;
         // virtualWorld.RotateAround(camera.position, Vector3.up, veOriy);
 
-        float virtualDeltaYaw = camera.eulerAngles.y - startVirtualYaw;
+        float virtualDeltaYaw = Mathf.DeltaAngle(camera.localEulerAngles.y, startVirtualLocalYaw);
 
         resetWarningAngleLeftUI.text = $"Please turn {(int)yawToRotate}°.";
 

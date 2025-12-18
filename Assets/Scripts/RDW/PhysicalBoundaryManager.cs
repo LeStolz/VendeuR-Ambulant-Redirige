@@ -22,7 +22,7 @@ public class PhysicalBoundaryManager : MonoBehaviour
     bool isPlacing = false;
 
     public List<Vector3> BoundaryPoints { get; private set; } = new();
-    public Vector3 BoundaryCenter { get; private set; }
+    public Transform BoundaryCenter { get; private set; }
     public float BoundaryRadius { get; private set; }
 
     void Awake()
@@ -68,8 +68,8 @@ public class PhysicalBoundaryManager : MonoBehaviour
         );
         if (!Physics.Raycast(ray, out RaycastHit hit)) return;
 
-        Vector3 placePos = new(hit.point.x, 0.1f, hit.point.z);
-        BoundaryPoints[BoundaryPoints.Count - 1] = placePos;
+        Vector3 placePos = transform.InverseTransformPoint(new(hit.point.x, 0.1f, hit.point.z));
+        BoundaryPoints[^1] = placePos;
 
         PlaceBoundary();
 
@@ -105,7 +105,13 @@ public class PhysicalBoundaryManager : MonoBehaviour
         isPlacing = false;
         physicalBoundaryVisibilityManager.SetBoundaryVisibility(XrBoundaryVisibility.VisibilitySuppressed);
 
-        BoundaryCenter = BoundaryPoints.Aggregate(Vector3.zero, (acc, point) => acc + point) / BoundaryPoints.Count;
+        if (BoundaryCenter == null)
+        {
+            BoundaryCenter = new GameObject("Physical Boundary Center").transform;
+            BoundaryCenter.parent = transform;
+        }
+        BoundaryCenter.position =
+            BoundaryPoints.Aggregate(Vector3.zero, (acc, point) => acc + point) / BoundaryPoints.Count;
 
         BoundaryRadius = float.MaxValue;
         for (int i = 0; i < BoundaryPoints.Count; i++)
@@ -115,10 +121,10 @@ public class PhysicalBoundaryManager : MonoBehaviour
 
             // Calculate distance from center to edge AB
             Vector3 lineDir = (pointB - pointA).normalized;
-            Vector3 AtoCenter = BoundaryCenter - pointA;
+            Vector3 AtoCenter = BoundaryCenter.position - pointA;
             Vector3 AtoCenterProjected = Vector3.Project(AtoCenter, lineDir);
             Vector3 closestPoint = pointA + AtoCenterProjected;
-            float dist = Vector3.Distance(BoundaryCenter, closestPoint);
+            float dist = Vector3.Distance(BoundaryCenter.position, closestPoint);
 
             BoundaryRadius = Mathf.Min(BoundaryRadius, dist);
         }
