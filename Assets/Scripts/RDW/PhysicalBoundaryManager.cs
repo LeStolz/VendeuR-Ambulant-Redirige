@@ -110,7 +110,7 @@ public class PhysicalBoundaryManager : MonoBehaviour
             BoundaryCenter = new GameObject("Physical Boundary Center").transform;
             BoundaryCenter.parent = transform;
         }
-        BoundaryCenter.position =
+        BoundaryCenter.localPosition =
             BoundaryPoints.Aggregate(Vector3.zero, (acc, point) => acc + point) / BoundaryPoints.Count;
 
         BoundaryRadius = float.MaxValue;
