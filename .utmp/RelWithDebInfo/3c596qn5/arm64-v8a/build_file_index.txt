@@ -1,0 +1,2 @@
+E:\VendeuR Ambulant Redirige\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\CMakeLists.txt
+E:\VendeuR Ambulant Redirige\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\GameActivity\CMakeLists.txt
