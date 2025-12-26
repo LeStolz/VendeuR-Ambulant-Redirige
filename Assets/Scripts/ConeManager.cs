@@ -7,9 +7,9 @@ public class ConeManager : MonoBehaviour
     public GameObject currentCone;
 
     [SerializeField] private GameObject conePrefab;
+    [SerializeField] private GameObject coneReference;
 
     private XRGrabInteractable grabInteractable;
-    private Vector3 initialPosition;
     private GameObject lastCone = null;
 
     void Start()
@@ -20,7 +20,6 @@ public class ConeManager : MonoBehaviour
     private void SetupCone(GameObject cone)
     {
         grabInteractable = cone.GetComponent<XRGrabInteractable>();
-        initialPosition = cone.transform.position;
 
         grabInteractable.selectEntered.AddListener(OnConeGrabbed);
         grabInteractable.selectExited.AddListener(OnConeReleased);
@@ -46,7 +45,8 @@ public class ConeManager : MonoBehaviour
 
     private void SpawnCone()
     {
-        currentCone = Instantiate(conePrefab, initialPosition, Quaternion.identity);
+        Debug.Log("pos : " + coneReference.transform.position);
+        currentCone = Instantiate(conePrefab, coneReference.transform.position, Quaternion.identity);
         currentCone.transform.SetParent(transform);
         currentCone.GetComponent<Rigidbody>().isKinematic = true;
 

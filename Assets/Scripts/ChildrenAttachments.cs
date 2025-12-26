@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
+using UnityEngine.UIElements;
 
 public class ChildrenAttachments : MonoBehaviour
 {
@@ -10,6 +11,8 @@ public class ChildrenAttachments : MonoBehaviour
         public Quaternion localRotation;
         public ConfigurableJoint Joint;
     }
+
+    public GameObject coneManager;
 
     public List<GameObject> objects = new List<GameObject>();
     private List<Child> objectLastTransforms = new();
@@ -32,6 +35,8 @@ public class ChildrenAttachments : MonoBehaviour
 
     private void SaveCurrentTransforms()
     {
+        objectLastTransforms.Clear();
+
         foreach (var obj in objects)
         {
             Quaternion localRot = Quaternion.Inverse(transform.rotation) * obj.transform.rotation;
@@ -66,6 +71,8 @@ public class ChildrenAttachments : MonoBehaviour
         for (int i = 0; i < objects.Count; i++)
         {
             var obj = objects[i];
+            obj.GetComponent<Rigidbody>().useGravity = false;
+            obj.GetComponent<BoxCollider>().enabled = false;
 
             if (objectLastTransforms[i].Joint == null)
             {
@@ -73,12 +80,6 @@ public class ChildrenAttachments : MonoBehaviour
                     transform.TransformPoint(objectLastTransforms[i].localPosition),
                     transform.rotation * objectLastTransforms[i].localRotation
                 );
-            }
-            else
-            {
-                // var joint = objectLastTransforms[i].Joint;
-                // joint.connectedAnchor = objectLastTransforms[i].localPosition;
-                // obj.transform.rotation = transform.rotation * objectLastTransforms[i].localRotation;
             }
         }
     }
@@ -109,18 +110,22 @@ public class ChildrenAttachments : MonoBehaviour
         }
     }
 
+    private void UpdateColliderStates()
+    {
+        foreach (var obj in objects)
+        {
+            obj.GetComponent<BoxCollider>().enabled = true;
+            obj.GetComponent<Rigidbody>().useGravity = true;
+        }
+    }
+
     private void Update()
     {
-        // if (grabInteractable.isHovered && !grabInteractable.isSelected)
-        // {
-        //     SaveCurrentTransforms();
-        //     Debug.Log("No Change");
-        // }
-
         if (Vector3.Distance(transform.position, lastPosition) > positionThreshold
                 || Quaternion.Angle(transform.rotation, lastRotation) > rotationThreshold
                 || grabInteractable.isSelected)
         {
+            coneManager.SetActive(false);
             FreeCoordinates();
             UpdateTransforms();
             lastPosition = transform.position;
@@ -130,6 +135,8 @@ public class ChildrenAttachments : MonoBehaviour
         else
         {
             LockCoordinates();
+            UpdateColliderStates();
+            coneManager.SetActive(true);
         }
     }
 }
