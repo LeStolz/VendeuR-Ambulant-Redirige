@@ -12,7 +12,7 @@ public class IceCreamContainer : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("spoon"))
+        if (other.CompareTag("Spoon"))
         {
             MakeIceCream();
         }

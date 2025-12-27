@@ -63939,8 +63939,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0.7071068, y: 0, z: -0, w: 0.7071067}
   m_LocalPosition: {x: -0.44069108, y: 0.82882565, z: 0.28549176}
-  m_LocalScale: {x: 0.22, y: 0.2200005, z: 0.23961453}
-  m_ConstrainProportionsScale: 1
+  m_LocalScale: {x: 0.22, y: 0.22, z: 0.24}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4632923176648894725}
   - {fileID: 1480585344}
@@ -64565,7 +64565,7 @@ GameObject:
   - component: {fileID: 8338177733898602673}
   - component: {fileID: 8338177733898602674}
   m_Layer: 0
-  m_Name: Cylinder.001
+  m_Name: Chocolate Jar
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -64584,7 +64584,7 @@ GameObject:
   - component: {fileID: 8065023206664861716}
   - component: {fileID: 8065023206664861717}
   m_Layer: 0
-  m_Name: Cylinder
+  m_Name: Vanilla Jar
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -65027,7 +65027,7 @@ GameObject:
   - component: {fileID: 2109673739203080512}
   - component: {fileID: 8467173389546033148}
   m_Layer: 0
-  m_Name: Cylinder.002
+  m_Name: Condensed Milk
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -66288,7 +66288,6 @@ Transform:
   - {fileID: 2045103965}
   - {fileID: 1786071356}
   - {fileID: 1263860767}
-  - {fileID: 5573311385657766840}
   m_Father: {fileID: 1257921951804037237}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &4678185058312762982
@@ -66381,7 +66380,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0.7071068, y: 0, z: -0, w: 0.7071067}
   m_LocalPosition: {x: -0.44069108, y: 0.82882565, z: 0.786}
-  m_LocalScale: {x: 0.22, y: 0.2200005, z: 0.23961453}
+  m_LocalScale: {x: 0.22035392, y: 0.22035442, z: 0.24000001}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 800052054}
@@ -66833,80 +66832,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1.9999992, y: 1.9999999, z: 1.9999989}
   m_Center: {x: -0.000076293945, y: 0.0000037625432, z: -0.000002861023}
---- !u!1001 &5573311385657766839
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 4632923176648894725}
-    m_Modifications:
-    - target: {fileID: 6028392425063843793, guid: 7083d19c8c92d6f4fb8b9336da2f5874, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 0.56
-      objectReference: {fileID: 0}
-    - target: {fileID: 6028392425063843793, guid: 7083d19c8c92d6f4fb8b9336da2f5874, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 0.56
-      objectReference: {fileID: 0}
-    - target: {fileID: 6028392425063843793, guid: 7083d19c8c92d6f4fb8b9336da2f5874, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 0.56
-      objectReference: {fileID: 0}
-    - target: {fileID: 6028392425063843793, guid: 7083d19c8c92d6f4fb8b9336da2f5874, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -0.5688
-      objectReference: {fileID: 0}
-    - target: {fileID: 6028392425063843793, guid: 7083d19c8c92d6f4fb8b9336da2f5874, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.8944
-      objectReference: {fileID: 0}
-    - target: {fileID: 6028392425063843793, guid: 7083d19c8c92d6f4fb8b9336da2f5874, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0.2432
-      objectReference: {fileID: 0}
-    - target: {fileID: 6028392425063843793, guid: 7083d19c8c92d6f4fb8b9336da2f5874, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6028392425063843793, guid: 7083d19c8c92d6f4fb8b9336da2f5874, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6028392425063843793, guid: 7083d19c8c92d6f4fb8b9336da2f5874, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6028392425063843793, guid: 7083d19c8c92d6f4fb8b9336da2f5874, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6028392425063843793, guid: 7083d19c8c92d6f4fb8b9336da2f5874, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6028392425063843793, guid: 7083d19c8c92d6f4fb8b9336da2f5874, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6028392425063843793, guid: 7083d19c8c92d6f4fb8b9336da2f5874, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6404952461184228715, guid: 7083d19c8c92d6f4fb8b9336da2f5874, type: 3}
-      propertyPath: m_Name
-      value: cone (5)
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 7083d19c8c92d6f4fb8b9336da2f5874, type: 3}
---- !u!4 &5573311385657766840 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 6028392425063843793, guid: 7083d19c8c92d6f4fb8b9336da2f5874, type: 3}
-  m_PrefabInstance: {fileID: 5573311385657766839}
-  m_PrefabAsset: {fileID: 0}
 --- !u!33 &5578040694570647488
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -67411,7 +67336,7 @@ GameObject:
   - component: {fileID: 4398014923768734711}
   - component: {fileID: 4434796127788963097}
   m_Layer: 0
-  m_Name: Cylinder.004
+  m_Name: Sprinkler
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -67876,16 +67801,16 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5233702223066631267}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.051771827, y: 0.41592202, z: -0.023724863, w: 0.90761536}
-  m_LocalPosition: {x: -0.1359, y: 0.9143, z: -0.1988}
-  m_LocalScale: {x: 0.027, y: 0.027, z: 0.06351217}
+  m_LocalRotation: {x: 0.051771853, y: 0.41592202, z: -0.02372487, w: 0.9076154}
+  m_LocalPosition: {x: -0.27180004, y: 0.66890985, z: -0.1044399}
+  m_LocalScale: {x: 0.05400001, y: 0.054000024, z: 0.12702438}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 2017018841}
   - {fileID: 4110709894535842491}
   - {fileID: 8764341767905982663}
   - {fileID: 443152461}
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 8849999493754087712}
   m_LocalEulerAnglesHint: {x: 6.529, y: 49.24, z: 0}
 --- !u!114 &7135211266384019330
 MonoBehaviour:
@@ -69061,6 +68986,7 @@ Transform:
   - {fileID: 5109037495801650462}
   - {fileID: 2983327271634951340}
   - {fileID: 713936891372735277}
+  - {fileID: 7135211266384019329}
   - {fileID: 861943660}
   - {fileID: 1607978551}
   - {fileID: 1476664544}
@@ -69517,4 +69443,3 @@ SceneRoots:
   - {fileID: 1783572214}
   - {fileID: 610590593}
   - {fileID: 2022990350}
-  - {fileID: 7135211266384019329}
