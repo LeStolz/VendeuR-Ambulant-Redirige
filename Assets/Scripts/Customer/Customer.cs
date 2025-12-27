@@ -71,6 +71,17 @@ public class Customer : MonoBehaviour
         return newOrder;
     }
 
+    void OnTriggerEnter(Collider other)
+    {
+        if (!other.TryGetComponent<IceCream>(out var iceCream)) return;
+
+        if (iceCream.IceCreamOrder == order)
+        {
+            Debug.Log("Customer served!");
+            Destroy(iceCream.gameObject);
+        }
+    }
+
     List<T> GenerateRandomComponents<T>(List<T> sourceList, bool unique, int minCount, int maxCount)
     {
         int count = Random.Range(minCount, maxCount + 1);

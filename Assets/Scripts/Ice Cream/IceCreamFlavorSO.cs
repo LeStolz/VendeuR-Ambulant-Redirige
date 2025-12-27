@@ -11,7 +11,6 @@ public enum IceCreamFlavor
 public class IceCreamFlavorSO : ScriptableObject
 {
 	public IceCreamFlavor flavor;
-	public float price;
 	public Color color;
 	public GameObject prefab;
 }

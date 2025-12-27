@@ -58,8 +58,6 @@ public class CustomerLookManager : MonoBehaviour
 			Quaternion targetRotation = Quaternion.LookRotation(lookDirection, Vector3.up);
 			transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * turningSpeed);
 
-			Debug.Log(Vector3.Angle(transform.forward, toTarget));
-
 			if (Vector3.Angle(transform.forward, toTarget) < turnToPlayerMinThresholdDegrees)
 			{
 				turningToPlayer = false;

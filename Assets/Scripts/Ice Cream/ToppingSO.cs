@@ -10,6 +10,4 @@ public enum Topping
 public class ToppingSO : ScriptableObject
 {
 	public Topping type;
-	public float price;
-	public GameObject prefab;
 }
