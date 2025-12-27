@@ -12,7 +12,7 @@ public class ChildrenAttachments : MonoBehaviour
         public ConfigurableJoint Joint;
     }
 
-    public GameObject coneManager;
+    public List<GameObject> coneManagers;
 
     public List<GameObject> objects = new List<GameObject>();
     private List<Child> objectLastTransforms = new();
@@ -125,7 +125,8 @@ public class ChildrenAttachments : MonoBehaviour
                 || Quaternion.Angle(transform.rotation, lastRotation) > rotationThreshold
                 || grabInteractable.isSelected)
         {
-            coneManager.SetActive(false);
+            foreach (var coneManager in coneManagers)
+                coneManager.SetActive(false);
             FreeCoordinates();
             UpdateTransforms();
             lastPosition = transform.position;
@@ -136,7 +137,8 @@ public class ChildrenAttachments : MonoBehaviour
         {
             LockCoordinates();
             UpdateColliderStates();
-            coneManager.SetActive(true);
+            foreach (var coneManager in coneManagers)
+                coneManager.SetActive(true);
         }
     }
 }
