@@ -217,9 +217,6 @@ public class RedirectionController : MonoBehaviour
             return;
         }
 
-        // float veOriy = (camera.localEulerAngles.y - prevLocalRot) * 2f;
-        // virtualWorld.RotateAround(camera.position, Vector3.up, veOriy);
-
         float virtualDeltaYaw = Mathf.DeltaAngle(camera.localEulerAngles.y, startVirtualLocalYaw);
 
         resetWarningAngleLeftUI.text = $"Please turn {(int)yawToRotate}°.";
