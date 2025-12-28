@@ -157,8 +157,6 @@ public class RedirectionController : MonoBehaviour
         curvatureGain = direction * -curvatureGain * speed * Mathf.Rad2Deg;
         float stillGain = direction * -extraStillRotationGain * Mathf.Rad2Deg * Time.deltaTime;
 
-        Debug.Log(yawToRotate);
-
         return curvatureGain + stillGain;
     }
 
