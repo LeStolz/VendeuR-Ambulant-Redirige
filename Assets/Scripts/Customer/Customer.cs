@@ -1,11 +1,12 @@
 using System.Collections.Generic;
+using Mono.Cecil.Cil;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class Customer : MonoBehaviour
 {
     CustomerOrderSO order;
-    CustomerOrderTrigger orderTriggeer;
+    CustomerOrderTrigger customerOrderTrigger;
 
     [SerializeField] GameObject orderDisplayUI;
     [SerializeField] List<GameObject> orderComponentDisplays;
@@ -13,16 +14,16 @@ public class Customer : MonoBehaviour
     void Start()
     {
         order = GenerateRandomOrder();
-        orderTriggeer = GetComponentInChildren<CustomerOrderTrigger>();
+        customerOrderTrigger = GetComponentInChildren<CustomerOrderTrigger>();
 
-        orderTriggeer.OnPlayerEnterRange += HandlePlayerEnterRange;
-        orderTriggeer.OnPlayerExitRange += HandlePlayerExitRange;
+        customerOrderTrigger.OnPlayerEnterRange += HandlePlayerEnterRange;
+        customerOrderTrigger.OnPlayerExitRange += HandlePlayerExitRange;
     }
 
     void OnDestroy()
     {
-        orderTriggeer.OnPlayerEnterRange -= HandlePlayerEnterRange;
-        orderTriggeer.OnPlayerExitRange -= HandlePlayerExitRange;
+        customerOrderTrigger.OnPlayerEnterRange -= HandlePlayerEnterRange;
+        customerOrderTrigger.OnPlayerExitRange -= HandlePlayerExitRange;
     }
 
     void HandlePlayerEnterRange()
@@ -33,17 +34,9 @@ public class Customer : MonoBehaviour
         coneDisplay.GetComponentInChildren<Image>().color = order.coneFlavor.color;
         coneDisplay.SetActive(true);
 
-        for (int i = 0; i < order.iceCreamFlavors.Count; i++)
+        for (int i = 0; i < order.iceCreamComponents.Count; i++)
         {
-            var iceCreamDisplay = orderComponentDisplays.Find(go => go.name.Contains($"Ice Cream ({i})"));
-            iceCreamDisplay.GetComponentInChildren<Image>().color = order.iceCreamFlavors[i].color;
-            iceCreamDisplay.SetActive(true);
-        }
-
-        for (int i = 0; i < order.toppings.Count; i++)
-        {
-            var toppingDisplay = orderComponentDisplays.Find(go => go.name.Contains(order.toppings[i].name));
-            toppingDisplay.SetActive(true);
+            order.iceCreamComponents[i].UpdateIceCreamUIVisuals(orderComponentDisplays, i);
         }
 
         orderDisplayUI.SetActive(true);
@@ -61,29 +54,42 @@ public class Customer : MonoBehaviour
         newOrder.coneFlavor = GenerateRandomComponent(
             IceCreamManager.Instance.ConeFlavors
         );
-        newOrder.iceCreamFlavors = GenerateRandomComponents(
-            IceCreamManager.Instance.IceCreamFlavors, false, 1, 3
-        );
-        newOrder.toppings = GenerateRandomComponents(
-            IceCreamManager.Instance.Toppings, true, 0, 2
-        );
+        var iceCreamFlavors = GenerateRandomComponents(
+            IceCreamManager.Instance.IceCreamFlavors, false, 1
+        ).ConvertAll(flavorSO => new IceCreamFlavorComponent { flavor = flavorSO });
+        var toppings = GenerateRandomComponents(
+            IceCreamManager.Instance.Toppings, true, 0
+        ).ConvertAll(toppingSO => new IceCreamToppingComponent { topping = toppingSO });
+
+        newOrder.iceCreamComponents = new List<IIceCreamComponent>();
+        newOrder.iceCreamComponents.AddRange(iceCreamFlavors);
+        newOrder.iceCreamComponents.AddRange(toppings);
 
         return newOrder;
     }
 
     void OnTriggerEnter(Collider other)
     {
-        if (!other.TryGetComponent<IceCream>(out var iceCream)) return;
+        if (
+            !other.TryGetComponent<IceCream>(out var iceCream) &&
+            !other.transform.parent.TryGetComponent<IceCream>(out iceCream) &&
+            !other.transform.parent.parent.TryGetComponent<IceCream>(out iceCream)
+        ) return;
 
-        if (iceCream.IceCreamOrder == order)
+        if (iceCream.IceCreamOrder.Equals(order))
         {
             Debug.Log("Customer served!");
             Destroy(iceCream.gameObject);
         }
+        else
+        {
+            Debug.Log("Wrong order!");
+        }
     }
 
-    List<T> GenerateRandomComponents<T>(List<T> sourceList, bool unique, int minCount, int maxCount)
+    List<T> GenerateRandomComponents<T>(List<T> sourceList, bool unique, int minCount)
     {
+        int maxCount = sourceList.Count;
         int count = Random.Range(minCount, maxCount + 1);
         List<T> items = new();
 

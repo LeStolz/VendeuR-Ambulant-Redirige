@@ -339,8 +339,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3824135766493185357}
-  - component: {fileID: 5920076225145382135}
   - component: {fileID: 4575734205221348582}
+  - component: {fileID: 7512771730171662931}
   m_Layer: 0
   m_Name: OrderTrigger
   m_TagString: Untagged
@@ -363,18 +363,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 5296761311848338033}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5920076225145382135
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2608537582180865052}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9772c48214f8c204a904e7e72acd3b7d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!135 &4575734205221348582
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -396,6 +384,18 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 5
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &7512771730171662931
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2608537582180865052}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a397042d889ede34881bd85f9ad2b8eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2884249758373795832
 GameObject:
   m_ObjectHideFlags: 0
@@ -955,6 +955,7 @@ MonoBehaviour:
   turnToPlayerMaxThresholdDegrees: 45
   turnToPlayerMinThresholdDegrees: 5
   turningSpeed: 1
+  rotateToPlayerDistance: 15
 --- !u!1 &7549063297804530876
 GameObject:
   m_ObjectHideFlags: 0

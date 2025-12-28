@@ -1,25 +1,15 @@
 using System.Collections.Generic;
-using Unity.XR.CoreUtils;
+using System.Linq;
 using UnityEngine;
 
 public class IceCream : MonoBehaviour
 {
     [SerializeField] List<GameObject> iceCreamDisplays;
+    [SerializeField] Renderer coneRenderer;
     [SerializeField] Material sprinklesMaterial;
 
     public CustomerOrderSO IceCreamOrder { get; private set; }
     List<IceCreamAddTrigger> triggers;
-
-    void Start()
-    {
-        IceCreamOrder = ScriptableObject.CreateInstance<CustomerOrderSO>();
-
-        triggers = new List<IceCreamAddTrigger>(GetComponentsInChildren<IceCreamAddTrigger>());
-        foreach (var trigger in triggers)
-        {
-            trigger.OnIceCreamComponentAdded += HandleIceCreamComponentAdded;
-        }
-    }
 
     void OnDestroy()
     {
@@ -29,45 +19,68 @@ public class IceCream : MonoBehaviour
         }
     }
 
-    void HandleIceCreamComponentAdded(IceCreamComponent component)
+    void HandleIceCreamComponentAdded(IceCreamComponentGO componentGO)
     {
-        if (
-            component.flavor != null
-            && IceCreamOrder.iceCreamFlavors.Count < iceCreamDisplays.Count
-            && IceCreamOrder.toppings.Count == 0)
-        {
-            IceCreamOrder.iceCreamFlavors.Add(component.flavor);
-            iceCreamDisplays[IceCreamOrder.iceCreamFlavors.Count - 1]
-                .GetComponent<Renderer>().material.color = component.flavor.color;
-            iceCreamDisplays[IceCreamOrder.iceCreamFlavors.Count - 1].SetActive(true);
-            Destroy(component.gameObject);
-        }
+        bool canAdd = false;
+        var component = componentGO.component;
+        var iceCreamFlavors = IceCreamOrder.iceCreamComponents.OfType<IceCreamFlavorComponent>();
 
         if (
-            component.topping != null
-            && IceCreamOrder.iceCreamFlavors.Count > 0
-            && !IceCreamOrder.toppings.Contains(component.topping)
+            component is IceCreamFlavorComponent
+            && iceCreamFlavors.Count() < IceCreamManager.Instance.IceCreamFlavors.Count
+            && IceCreamOrder.iceCreamComponents.OfType<IceCreamToppingComponent>().Count() == 0
         )
         {
-            IceCreamOrder.toppings.Add(component.topping);
-
-            if (component.topping.name.Contains("Sprinkles"))
-            {
-                iceCreamDisplays[IceCreamOrder.toppings.Count - 1]
-                    .GetComponent<Renderer>().AddMaterial(sprinklesMaterial);
-            }
-            else if (component.topping.name.Contains("Condensed Milk"))
-            {
-                iceCreamDisplays[IceCreamOrder.toppings.Count - 1]
-                    .transform.Find("Condensed Milk").gameObject.SetActive(true);
-            }
-
-            Destroy(component.gameObject);
+            canAdd = true;
         }
+
+        if (
+            component is IceCreamToppingComponent toppingComponent
+            && iceCreamFlavors.Count() > 0
+            && !IceCreamOrder.iceCreamComponents.Contains(toppingComponent)
+        )
+        {
+            canAdd = true;
+        }
+
+        if (!canAdd) return;
+
+        component.UpdateIceCreamComponentVisuals(iceCreamDisplays);
+        componentGO.Consume();
+
+        IceCreamOrder.iceCreamComponents.Add(component);
+    }
+
+    void Update()
+    {
+        var s = "";
+        foreach (var component in IceCreamOrder.iceCreamComponents)
+        {
+            if (component is IceCreamToppingComponent tc)
+            {
+                s += tc.topping.name;
+            }
+            if (component is IceCreamFlavorComponent fc)
+            {
+                s += fc.flavor.name;
+            }
+        }
+
+        Debug.Log(s);
     }
 
     public void Initialize(ConeFlavorSO coneFlavor)
     {
+        IceCreamOrder = ScriptableObject.CreateInstance<CustomerOrderSO>();
+        IceCreamOrder.iceCreamComponents = new List<IIceCreamComponent>();
+
+        triggers = new List<IceCreamAddTrigger>(GetComponentsInChildren<IceCreamAddTrigger>());
+        foreach (var trigger in triggers)
+        {
+            trigger.OnIceCreamComponentAdded += HandleIceCreamComponentAdded;
+        }
+
         IceCreamOrder.coneFlavor = coneFlavor;
+        coneRenderer.material.SetColor("_BaseColor", coneFlavor.color);
     }
 }

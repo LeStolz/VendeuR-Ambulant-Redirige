@@ -7,8 +7,9 @@ public class CustomerSpawnerManager : MonoBehaviour
     public static CustomerSpawnerManager Instance { get; private set; }
 
     [SerializeField] List<Customer> customerPrefabs;
-    [SerializeField] float spawnDistanceMinThreshold = 10f;
-    [SerializeField] float spawnDistanceMaxThreshold = 100f;
+    [SerializeField] float minSpawnDistanceFromPlayer = 10f;
+    [SerializeField] float maxSpawnDistanceFromPlayer = 50f;
+    [SerializeField] float minSpawnDistanceFromOtherCustomers = 10f;
     [SerializeField] int minCustomers = 8;
     List<Customer> existingCustomers = new();
     GameObject player;
@@ -54,9 +55,12 @@ public class CustomerSpawnerManager : MonoBehaviour
             var distanceToPlayer = Vector3.Distance(segment.transform.position, player.transform.position);
 
             if (
-                spawnDistanceMinThreshold < distanceToPlayer
-                && distanceToPlayer < spawnDistanceMaxThreshold
-                && !existingCustomers.Exists(customer => customer.transform.parent.position == segment.position)
+                minSpawnDistanceFromPlayer < distanceToPlayer && distanceToPlayer < maxSpawnDistanceFromPlayer
+                && !existingCustomers.Exists(
+                    customer => Vector3.Distance(
+                        customer.transform.parent.position, segment.position
+                    ) < minSpawnDistanceFromOtherCustomers
+                )
             )
             {
                 var randomCustomer = customerPrefabs[Random.Range(0, customerPrefabs.Count)];
@@ -66,13 +70,14 @@ public class CustomerSpawnerManager : MonoBehaviour
                     + Vector3.up * randomCustomer.transform.localScale.y
                     + Vector3.right * Random.Range(-width, width)
                     + Vector3.forward * Random.Range(-width, width);
+                var randomCustomerRotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
 
                 var randomCustomerColor = Random.ColorHSV();
 
                 var customer = Instantiate(
                     randomCustomer,
                     randomCustomerPosition,
-                    segment.transform.rotation,
+                    randomCustomerRotation,
                     segment.transform
                 );
 

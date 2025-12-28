@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CustomerLookManager : MonoBehaviour
+public class CustomerVisuals : MonoBehaviour
 {
 	Transform target;
 
@@ -12,6 +12,8 @@ public class CustomerLookManager : MonoBehaviour
 	[SerializeField] float turnToPlayerMaxThresholdDegrees = 45f;
 	[SerializeField] float turnToPlayerMinThresholdDegrees = 5f;
 	[SerializeField] float turningSpeed = 2f;
+
+	[SerializeField] float rotateToPlayerDistance = 15f;
 
 	bool turningToPlayer = false;
 
@@ -28,7 +30,7 @@ public class CustomerLookManager : MonoBehaviour
 
 	void Update()
 	{
-		if (target == null) return;
+		if (target == null || Vector3.Distance(transform.position, target.position) > rotateToPlayerDistance) return;
 
 		for (int i = 0; i < eyes.Count; i++)
 		{

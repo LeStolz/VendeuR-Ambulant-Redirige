@@ -3,11 +3,11 @@ using UnityEngine;
 
 public class IceCreamAddTrigger : MonoBehaviour
 {
-    public event Action<IceCreamComponent> OnIceCreamComponentAdded;
+    public event Action<IceCreamComponentGO> OnIceCreamComponentAdded;
 
     void OnTriggerEnter(Collider other)
     {
-        if (!other.TryGetComponent<IceCreamComponent>(out var iceCreamComponent))
+        if (!other.TryGetComponent<IceCreamComponentGO>(out var iceCreamComponent))
         {
             return;
         }

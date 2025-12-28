@@ -2,22 +2,35 @@ using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
-public class ConeManager : MonoBehaviour
+public class ConeContainer : MonoBehaviour
 {
-    public GameObject currentCone;
+    [SerializeField] ConeFlavorSO coneFlavor;
+    [SerializeField] IceCream conePrefab;
 
-    [SerializeField] private GameObject conePrefab;
-    [SerializeField] private GameObject coneReference;
+    [SerializeField] Transform coneSpawnLocation;
 
     private XRGrabInteractable grabInteractable;
-    private GameObject lastCone = null;
+    private IceCream lastCone = null;
+    private IceCream currentCone;
 
     void Start()
     {
-        SetupCone(currentCone);
+        SpawnCone();
+
+        var renderers = GetComponentsInChildren<Renderer>();
+        foreach (var renderer in renderers)
+        {
+            foreach (var mat in renderer.materials)
+            {
+                if (mat.name.Contains("cone"))
+                {
+                    mat.color = coneFlavor.color;
+                }
+            }
+        }
     }
 
-    private void SetupCone(GameObject cone)
+    private void SetupCone(IceCream cone)
     {
         grabInteractable = cone.GetComponent<XRGrabInteractable>();
 
@@ -45,12 +58,20 @@ public class ConeManager : MonoBehaviour
 
     private void SpawnCone()
     {
-        Debug.Log("pos : " + coneReference.transform.position);
-        currentCone = Instantiate(conePrefab, coneReference.transform.position, Quaternion.identity);
+        currentCone = Instantiate(conePrefab, coneSpawnLocation.position, Quaternion.identity).GetComponent<IceCream>();
         currentCone.transform.SetParent(transform);
         currentCone.GetComponent<Rigidbody>().isKinematic = true;
+        currentCone.Initialize(coneFlavor);
 
-        grabInteractable.selectEntered.RemoveListener(OnConeGrabbed);
+        if (grabInteractable != null)
+            grabInteractable.selectEntered.RemoveListener(OnConeGrabbed);
+
         SetupCone(currentCone);
+    }
+
+    public void ToggleConeVisibility(bool on)
+    {
+        if (currentCone != null)
+            currentCone.gameObject.SetActive(on);
     }
 }

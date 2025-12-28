@@ -1,22 +1,22 @@
 using System;
 using UnityEngine;
 
-public class CustomerOrderTrigger : MonoBehaviour
+class CustomerOrderTrigger : MonoBehaviour
 {
     public event Action OnPlayerEnterRange;
     public event Action OnPlayerExitRange;
 
-    void OnTriggerEnter(Collider other)
+    private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player"))
+        if (other.CompareTag("MainCamera"))
         {
             OnPlayerEnterRange?.Invoke();
         }
     }
 
-    void OnTriggerExit(Collider other)
+    private void OnTriggerExit(Collider other)
     {
-        if (other.CompareTag("Player"))
+        if (other.CompareTag("MainCamera"))
         {
             OnPlayerExitRange?.Invoke();
         }

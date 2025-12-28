@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 6896279727640609070}
   - component: {fileID: 478054079713264966}
   m_Layer: 6
-  m_Name: IceCreamContainer
+  m_Name: Ice Cream Container
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -66,7 +66,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: c843277efc822e847b3aa84174ebc317, type: 2}
+  - {fileID: 2100000, guid: 76618f7490c40334fa7b685859587d2e, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -121,4 +121,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aac48898653a25d488ccc387034a1b9e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  iceCream: {fileID: 0}
+  iceCreamFlavor: {fileID: 0}

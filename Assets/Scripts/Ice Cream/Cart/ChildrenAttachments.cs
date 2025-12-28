@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
-using UnityEngine.UIElements;
 
 public class ChildrenAttachments : MonoBehaviour
 {
@@ -12,7 +11,7 @@ public class ChildrenAttachments : MonoBehaviour
         public ConfigurableJoint Joint;
     }
 
-    public List<GameObject> coneManagers;
+    public List<ConeContainer> coneManagers;
 
     public List<GameObject> objects = new List<GameObject>();
     private List<Child> objectLastTransforms = new();
@@ -126,19 +125,18 @@ public class ChildrenAttachments : MonoBehaviour
                 || grabInteractable.isSelected)
         {
             foreach (var coneManager in coneManagers)
-                coneManager.SetActive(false);
+                coneManager.ToggleConeVisibility(false);
             FreeCoordinates();
             UpdateTransforms();
             lastPosition = transform.position;
             lastRotation = transform.rotation;
-            Debug.Log("Change");
         }
         else
         {
             LockCoordinates();
             UpdateColliderStates();
             foreach (var coneManager in coneManagers)
-                coneManager.SetActive(true);
+                coneManager.ToggleConeVisibility(true);
         }
     }
 }
