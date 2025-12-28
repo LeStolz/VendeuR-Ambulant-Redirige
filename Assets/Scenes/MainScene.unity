@@ -52805,6 +52805,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1170667757}
     m_Modifications:
+    - target: {fileID: 4797262385686869554, guid: ea7647eb3ca5fa944bda5c2251579097, type: 3}
+      propertyPath: m_IsKinematic
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8154138585064972488, guid: ea7647eb3ca5fa944bda5c2251579097, type: 3}
       propertyPath: m_Name
       value: conePink
