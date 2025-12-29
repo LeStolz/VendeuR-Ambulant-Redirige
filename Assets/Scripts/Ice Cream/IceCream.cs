@@ -34,7 +34,11 @@ public class IceCream : MonoBehaviour
 
         var component = componentGO.component;
 
-        if (!component.CanAdd(IceCreamOrder.iceCreamComponents)) return;
+        if (!component.CanAdd(IceCreamOrder.iceCreamComponents))
+        {
+            StartCoroutine(ResetCanAdd());
+            return;
+        }
 
         component.UpdateIceCreamComponentVisuals(iceCreamDisplays);
         componentGO.Consume();

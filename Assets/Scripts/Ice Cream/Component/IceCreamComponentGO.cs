@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
@@ -19,7 +18,7 @@ public class IceCreamComponentGO : MonoBehaviour
         {
             component = new IceCreamToppingComponent { topping = topping, sprinklesMaterial = sprinklesMaterial };
         }
-        else
+        else if (flavor != null)
         {
             component = new IceCreamFlavorComponent { flavor = flavor };
         }
