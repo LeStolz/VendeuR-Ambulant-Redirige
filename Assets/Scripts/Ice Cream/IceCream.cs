@@ -65,8 +65,6 @@ public class IceCream : MonoBehaviour
                 s += fc.flavor.name;
             }
         }
-
-        Debug.Log(s);
     }
 
     public void Initialize(ConeFlavorSO coneFlavor)
@@ -74,7 +72,7 @@ public class IceCream : MonoBehaviour
         IceCreamOrder = ScriptableObject.CreateInstance<CustomerOrderSO>();
         IceCreamOrder.iceCreamComponents = new List<IIceCreamComponent>();
 
-        triggers = new List<IceCreamAddTrigger>(GetComponentsInChildren<IceCreamAddTrigger>());
+        triggers = new List<IceCreamAddTrigger>(GetComponentsInChildren<IceCreamAddTrigger>(true));
         foreach (var trigger in triggers)
         {
             trigger.OnIceCreamComponentAdded += HandleIceCreamComponentAdded;
