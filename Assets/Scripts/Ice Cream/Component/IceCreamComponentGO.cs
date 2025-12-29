@@ -1,4 +1,7 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.XR.Interaction.Toolkit.Interactables;
+using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
 public class IceCreamComponentGO : MonoBehaviour
 {
@@ -7,6 +10,7 @@ public class IceCreamComponentGO : MonoBehaviour
 
     [SerializeField] AudioSource sound;
     [SerializeField] Material sprinklesMaterial;
+    [SerializeField] XRGrabInteractable grabInteractable;
     public IIceCreamComponent component;
 
     void Start()
@@ -25,5 +29,26 @@ public class IceCreamComponentGO : MonoBehaviour
     {
         component.Consume(gameObject);
         sound.Play();
+
+        if (grabInteractable.isSelected)
+        {
+            var interactor = grabInteractable.firstInteractorSelecting;
+            HapticManager.Instance.TriggerInteractionHaptic(
+                interactor.handedness == InteractorHandedness.Left ? HapticManager.Hand.Left : HapticManager.Hand.Right
+            );
+        }
+    }
+
+    public void Interact()
+    {
+        sound.Play();
+
+        if (grabInteractable.isSelected)
+        {
+            var interactor = grabInteractable.firstInteractorSelecting;
+            HapticManager.Instance.TriggerInteractionHaptic(
+                interactor.handedness == InteractorHandedness.Left ? HapticManager.Hand.Left : HapticManager.Hand.Right
+            );
+        }
     }
 }

@@ -74,6 +74,7 @@ public class Customer : MonoBehaviour
         {
             orderCompleteAudioSource.Play();
             customerVisuals.SetEmotion(EyeEmotion.Happy);
+            HapticManager.Instance.TriggerSucessHaptic(HapticManager.Hand.Both);
             Destroy(iceCream.gameObject);
 
             IEnumerator DespawnAfterSound()
@@ -86,8 +87,9 @@ public class Customer : MonoBehaviour
         }
         else
         {
-            customerVisuals.SetEmotion(EyeEmotion.Angry);
             orderWrongAudioSource.Play();
+            customerVisuals.SetEmotion(EyeEmotion.Angry);
+            HapticManager.Instance.TriggerFailureHaptic(HapticManager.Hand.Both);
         }
     }
 
