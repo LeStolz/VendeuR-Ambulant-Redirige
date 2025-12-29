@@ -36,4 +36,9 @@ public class IceCreamToppingComponent : IIceCreamComponent
         return other is IceCreamToppingComponent otherTopping &&
                topping == otherTopping.topping;
     }
+
+    public bool CanAdd(List<IIceCreamComponent> currentComponents)
+    {
+        return currentComponents.OfType<IceCreamFlavorComponent>().Count() > 0 && !currentComponents.Contains(this);
+    }
 }

@@ -8,6 +8,7 @@ public class CartHandleManager : MonoBehaviour
 {
     struct Child
     {
+        public GameObject gameObject;
         public Vector3 localPosition;
         public Quaternion localRotation;
         public ConfigurableJoint Joint;
@@ -41,115 +42,82 @@ public class CartHandleManager : MonoBehaviour
         foreach (var obj in objects)
         {
             Quaternion localRot = Quaternion.Inverse(transform.rotation) * obj.transform.rotation;
+            Vector3 localPos = transform.InverseTransformPoint(obj.transform.position);
 
             if (obj.TryGetComponent<ConfigurableJoint>(out var joint))
             {
-                Vector3 localPos = joint.connectedAnchor;
-
-                objectLastTransforms.Add(new Child
-                {
-                    localPosition = localPos,
-                    localRotation = localRot,
-                    Joint = joint
-                });
+                localPos = joint.connectedAnchor;
             }
-            else
+
+            objectLastTransforms.Add(new Child
             {
-                Vector3 localPos = transform.InverseTransformPoint(obj.transform.position);
-
-                objectLastTransforms.Add(new Child
-                {
-                    localPosition = localPos,
-                    localRotation = localRot,
-                    Joint = null
-                });
-            }
+                gameObject = obj,
+                localPosition = localPos,
+                localRotation = localRot,
+                Joint = joint
+            });
         }
     }
 
-    private void UpdateTransforms()
-    {
-        for (int i = 0; i < objects.Count; i++)
-        {
-            var obj = objects[i];
-            obj.GetComponent<Rigidbody>().useGravity = false;
-            obj.GetComponent<BoxCollider>().enabled = false;
-
-            if (objectLastTransforms[i].Joint == null)
-            {
-                obj.transform.SetPositionAndRotation(
-                    transform.TransformPoint(objectLastTransforms[i].localPosition),
-                    transform.rotation * objectLastTransforms[i].localRotation
-                );
-            }
-        }
-    }
-
-    private void FreeCoordinates()
+    private void LockMotions()
     {
         foreach (var obj in objectLastTransforms)
         {
-            if (obj.Joint == null) continue;
-            var jt = obj.Joint;
+            obj.gameObject.GetComponent<Rigidbody>().useGravity = false;
+            obj.gameObject.GetComponent<BoxCollider>().enabled = false;
 
-            jt.xMotion = ConfigurableJointMotion.Locked;
-            jt.yMotion = ConfigurableJointMotion.Locked;
-            jt.zMotion = ConfigurableJointMotion.Locked;
+            obj.gameObject.transform.SetPositionAndRotation(
+                transform.TransformPoint(obj.localPosition),
+                transform.rotation * obj.localRotation
+            );
+
+            if (obj.Joint != null)
+            {
+                obj.Joint.xMotion = ConfigurableJointMotion.Locked;
+            }
         }
     }
 
-    private void LockCoordinates()
+    private void FreeMotions()
     {
         foreach (var obj in objectLastTransforms)
         {
-            if (obj.Joint == null) continue;
-            var jt = obj.Joint;
+            obj.gameObject.GetComponent<BoxCollider>().enabled = true;
+            obj.gameObject.GetComponent<Rigidbody>().useGravity = true;
 
-            jt.xMotion = ConfigurableJointMotion.Limited;
-            jt.yMotion = ConfigurableJointMotion.Locked;
-            jt.zMotion = ConfigurableJointMotion.Locked;
-        }
-    }
-
-    private void UpdateColliderStates()
-    {
-        foreach (var obj in objects)
-        {
-            obj.GetComponent<BoxCollider>().enabled = true;
-            obj.GetComponent<Rigidbody>().useGravity = true;
+            if (obj.Joint != null)
+            {
+                obj.Joint.xMotion = ConfigurableJointMotion.Limited;
+            }
         }
     }
 
     private void Update()
     {
-        if (grabInteractable.isSelected && !cartAudioSources.Any(audioSource => audioSource.isPlaying))
+        bool transformed = Vector3.Distance(transform.position, lastPosition) > GlobalThresholds.EPS
+            || Quaternion.Angle(transform.rotation, lastRotation) > 10 * GlobalThresholds.EPS;
+
+        if (transformed && !cartAudioSources.Any(audioSource => audioSource.isPlaying))
         {
             cartAudioSources.ForEach(audioSource => audioSource.Play());
         }
-        else if (!grabInteractable.isSelected && cartAudioSources.Any(audioSource => audioSource.isPlaying))
+        else if (!transformed && cartAudioSources.Any(audioSource => audioSource.isPlaying))
         {
             cartAudioSources.ForEach(audioSource => audioSource.Pause());
         }
 
-        if (
-            Vector3.Distance(transform.position, lastPosition) > GlobalThresholds.EPS
-            || Quaternion.Angle(transform.rotation, lastRotation) > 10 * GlobalThresholds.EPS
-            || grabInteractable.isSelected
-        )
+        if (transformed || grabInteractable.isSelected)
         {
             foreach (var coneManager in coneContainers) coneManager.ToggleConeVisibility(false);
-
-            FreeCoordinates();
-            UpdateTransforms();
-            lastPosition = transform.position;
-            lastRotation = transform.rotation;
+            LockMotions();
         }
         else
         {
-            LockCoordinates();
-            UpdateColliderStates();
-
+            FreeMotions();
             foreach (var coneManager in coneContainers) coneManager.ToggleConeVisibility(true);
         }
+
+        lastPosition = transform.position;
+        lastRotation = transform.rotation;
     }
 }

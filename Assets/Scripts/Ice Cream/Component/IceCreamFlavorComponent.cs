@@ -40,4 +40,10 @@ public class IceCreamFlavorComponent : IIceCreamComponent
         return other is IceCreamFlavorComponent otherFlavorComponent &&
                flavor == otherFlavorComponent.flavor;
     }
+
+    public bool CanAdd(List<IIceCreamComponent> currentComponents)
+    {
+        return currentComponents.OfType<IceCreamFlavorComponent>().Count() < IceCreamManager.Instance.IceCreamFlavors.Count
+             && currentComponents.OfType<IceCreamToppingComponent>().Count() == 0;
+    }
 }

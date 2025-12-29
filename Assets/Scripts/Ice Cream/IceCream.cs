@@ -1,15 +1,17 @@
+using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 public class IceCream : MonoBehaviour
 {
+    private static WaitForSeconds _waitForSeconds0_5 = new WaitForSeconds(0.5f);
     [SerializeField] List<GameObject> iceCreamDisplays;
     [SerializeField] Renderer coneRenderer;
     [SerializeField] Material sprinklesMaterial;
 
     public CustomerOrderSO IceCreamOrder { get; private set; }
     List<IceCreamAddTrigger> triggers;
+    bool canAdd = true;
 
     void OnDestroy()
     {
@@ -19,52 +21,31 @@ public class IceCream : MonoBehaviour
         }
     }
 
+    IEnumerator ResetCanAdd()
+    {
+        yield return _waitForSeconds0_5;
+        canAdd = true;
+    }
+
     void HandleIceCreamComponentAdded(IceCreamComponentGO componentGO)
     {
-        bool canAdd = false;
-        var component = componentGO.component;
-        var iceCreamFlavors = IceCreamOrder.iceCreamComponents.OfType<IceCreamFlavorComponent>();
-
-        if (
-            component is IceCreamFlavorComponent
-            && iceCreamFlavors.Count() < IceCreamManager.Instance.IceCreamFlavors.Count
-            && IceCreamOrder.iceCreamComponents.OfType<IceCreamToppingComponent>().Count() == 0
-        )
-        {
-            canAdd = true;
-        }
-
-        if (
-            component is IceCreamToppingComponent toppingComponent
-            && iceCreamFlavors.Count() > 0
-            && !IceCreamOrder.iceCreamComponents.Contains(toppingComponent)
-        )
-        {
-            canAdd = true;
-        }
-
         if (!canAdd) return;
+        canAdd = false;
+
+        var component = componentGO.component;
+
+        if (!component.CanAdd(IceCreamOrder.iceCreamComponents))
+        {
+            StartCoroutine(ResetCanAdd());
+            return;
+        }
 
         component.UpdateIceCreamComponentVisuals(iceCreamDisplays);
         componentGO.Consume();
 
         IceCreamOrder.iceCreamComponents.Add(component);
-    }
 
-    void Update()
-    {
-        var s = "";
-        foreach (var component in IceCreamOrder.iceCreamComponents)
-        {
-            if (component is IceCreamToppingComponent tc)
-            {
-                s += tc.topping.name;
-            }
-            if (component is IceCreamFlavorComponent fc)
-            {
-                s += fc.flavor.name;
-            }
-        }
+        StartCoroutine(ResetCanAdd());
     }
 
     public void Initialize(ConeFlavorSO coneFlavor)

@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class CustomerSpawnerManager : MonoBehaviour
 {
+    private static WaitForSeconds _waitForSeconds0_4 = new WaitForSeconds(0.4f);
+
     public static CustomerSpawnerManager Instance { get; private set; }
 
     [SerializeField] List<Customer> customerPrefabs;
@@ -11,7 +13,7 @@ public class CustomerSpawnerManager : MonoBehaviour
     [SerializeField] float maxSpawnDistanceFromPlayer = 50f;
     [SerializeField] float minSpawnDistanceFromOtherCustomers = 10f;
     [SerializeField] int minCustomers = 8;
-    List<Customer> existingCustomers = new();
+    public List<Customer> existingCustomers { get; private set; } = new();
     GameObject player;
 
     void Awake()
@@ -33,7 +35,7 @@ public class CustomerSpawnerManager : MonoBehaviour
 
         IEnumerator StartCouroutine()
         {
-            yield return new WaitForSeconds(1f);
+            yield return _waitForSeconds0_4;
 
             bool possibleToSpawn = true;
             while (existingCustomers.Count < minCustomers && possibleToSpawn)

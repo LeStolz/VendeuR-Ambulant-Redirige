@@ -14,15 +14,11 @@ public class IceCreamContainer : MonoBehaviour
     {
         if (other.CompareTag("Spoon"))
         {
-            if (other.TryGetComponent<AudioSource>(out var audioSource))
-            {
-                audioSource.Play();
-            }
-
             var iceCream = other.GetComponentInChildren<IceCreamComponentGO>(true);
+            iceCream.gameObject.SetActive(true);
             iceCream.component = new IceCreamFlavorComponent { flavor = iceCreamFlavor };
             iceCream.GetComponent<Renderer>().material.SetColor("_BaseColor", iceCreamFlavor.color);
-            iceCream.gameObject.SetActive(true);
+            iceCream.Interact();
         }
     }
 }
