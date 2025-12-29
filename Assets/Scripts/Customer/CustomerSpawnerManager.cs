@@ -13,7 +13,7 @@ public class CustomerSpawnerManager : MonoBehaviour
     [SerializeField] float maxSpawnDistanceFromPlayer = 50f;
     [SerializeField] float minSpawnDistanceFromOtherCustomers = 10f;
     [SerializeField] int minCustomers = 8;
-    List<Customer> existingCustomers = new();
+    public List<Customer> existingCustomers { get; private set; } = new();
     GameObject player;
 
     void Awake()
