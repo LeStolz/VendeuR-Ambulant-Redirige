@@ -65,8 +65,6 @@ public class IceCream : MonoBehaviour
                 s += fc.flavor.name;
             }
         }
-
-        Debug.Log(s);
     }
 
     public void Initialize(ConeFlavorSO coneFlavor)
