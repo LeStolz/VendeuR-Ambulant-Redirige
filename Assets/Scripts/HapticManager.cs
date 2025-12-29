@@ -6,7 +6,7 @@ using UnityEngine.InputSystem.XR.Haptics;
 
 public class HapticManager : MonoBehaviour
 {
-    private static WaitForSeconds _waitForSeconds0_4 = new(0.4f);
+    private static WaitForSeconds _waitForSeconds0_8 = new(0.8f);
 
     public enum Hand
     {
@@ -51,7 +51,7 @@ public class HapticManager : MonoBehaviour
         IEnumerator TriggerSucessHapticCoroutine()
         {
             TriggerHaptic(hand, shortImpulse);
-            yield return _waitForSeconds0_4;
+            yield return _waitForSeconds0_8;
             TriggerHaptic(hand, shortImpulse);
         }
 
