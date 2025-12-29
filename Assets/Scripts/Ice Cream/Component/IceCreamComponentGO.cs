@@ -5,6 +5,7 @@ public class IceCreamComponentGO : MonoBehaviour
     [SerializeField] ToppingSO topping;
     [SerializeField] IceCreamFlavorSO flavor;
 
+    [SerializeField] AudioSource sound;
     [SerializeField] Material sprinklesMaterial;
     public IIceCreamComponent component;
 
@@ -23,5 +24,6 @@ public class IceCreamComponentGO : MonoBehaviour
     public void Consume()
     {
         component.Consume(gameObject);
+        sound.Play();
     }
 }

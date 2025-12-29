@@ -123,4 +123,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   topping: {fileID: 0}
   flavor: {fileID: 0}
+  sound: {fileID: 0}
   sprinklesMaterial: {fileID: 0}

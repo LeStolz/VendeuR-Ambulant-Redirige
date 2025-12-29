@@ -1,29 +1,30 @@
+using System.Collections;
 using System.Collections.Generic;
-using Mono.Cecil.Cil;
 using UnityEngine;
 using UnityEngine.UI;
 
+[RequireComponent(typeof(CustomerVisuals))]
 public class Customer : MonoBehaviour
 {
     CustomerOrderSO order;
     CustomerOrderTrigger customerOrderTrigger;
+    CustomerVisuals customerVisuals;
 
-    [SerializeField] GameObject orderDisplayUI;
     [SerializeField] List<GameObject> orderComponentDisplays;
+    [SerializeField] AudioSource orderCompleteAudioSource;
+    [SerializeField] AudioSource orderWrongAudioSource;
 
     void Start()
     {
         order = GenerateRandomOrder();
+        customerVisuals = GetComponent<CustomerVisuals>();
         customerOrderTrigger = GetComponentInChildren<CustomerOrderTrigger>();
-
         customerOrderTrigger.OnPlayerEnterRange += HandlePlayerEnterRange;
-        customerOrderTrigger.OnPlayerExitRange += HandlePlayerExitRange;
     }
 
     void OnDestroy()
     {
         customerOrderTrigger.OnPlayerEnterRange -= HandlePlayerEnterRange;
-        customerOrderTrigger.OnPlayerExitRange -= HandlePlayerExitRange;
     }
 
     void HandlePlayerEnterRange()
@@ -38,13 +39,6 @@ public class Customer : MonoBehaviour
         {
             order.iceCreamComponents[i].UpdateIceCreamUIVisuals(orderComponentDisplays, i);
         }
-
-        orderDisplayUI.SetActive(true);
-    }
-
-    void HandlePlayerExitRange()
-    {
-        orderDisplayUI.SetActive(false);
     }
 
     CustomerOrderSO GenerateRandomOrder()
@@ -72,18 +66,28 @@ public class Customer : MonoBehaviour
     {
         if (
             !other.TryGetComponent<IceCream>(out var iceCream) &&
-            !other.transform.parent.TryGetComponent<IceCream>(out iceCream) &&
-            !other.transform.parent.parent.TryGetComponent<IceCream>(out iceCream)
+            !other.transform.parent.TryGetComponent(out iceCream) &&
+            !other.transform.parent.parent.TryGetComponent(out iceCream)
         ) return;
 
         if (iceCream.IceCreamOrder.Equals(order))
         {
-            Debug.Log("Customer served!");
+            orderCompleteAudioSource.Play();
+            customerVisuals.SetEmotion(EyeEmotion.Happy);
             Destroy(iceCream.gameObject);
+
+            IEnumerator DespawnAfterSound()
+            {
+                yield return new WaitForSeconds(orderCompleteAudioSource.clip.length);
+                CustomerSpawnerManager.Instance.DespawnCustomer(this);
+            }
+
+            StartCoroutine(DespawnAfterSound());
         }
         else
         {
-            Debug.Log("Wrong order!");
+            customerVisuals.SetEmotion(EyeEmotion.Angry);
+            orderWrongAudioSource.Play();
         }
     }
 
