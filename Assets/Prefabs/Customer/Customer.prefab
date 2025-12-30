@@ -166,9 +166,9 @@ AudioSource:
   m_audioClip: {fileID: 8300000, guid: b5086216bb692cd49bbaedf712f04eba, type: 3}
   m_Resource: {fileID: 8300000, guid: b5086216bb692cd49bbaedf712f04eba, type: 3}
   m_PlayOnAwake: 1
-  m_Volume: 0.75
+  m_Volume: 1
   m_Pitch: 1
-  Loop: 1
+  Loop: 0
   Mute: 0
   Spatialize: 1
   SpatializePostEffects: 0
@@ -485,12 +485,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3824135766493185357}
-  - component: {fileID: 4575734205221348582}
-  - component: {fileID: 7512771730171662931}
   - component: {fileID: 1539865026993581138}
   - component: {fileID: 358363541086174007}
   m_Layer: 0
-  m_Name: OrderTrigger
+  m_Name: Ambiance
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -511,39 +509,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 5296761311848338033}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!135 &4575734205221348582
-SphereCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2608537582180865052}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Radius: 5
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &7512771730171662931
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2608537582180865052}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a397042d889ede34881bd85f9ad2b8eb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!82 &1539865026993581138
 AudioSource:
   m_ObjectHideFlags: 0
@@ -1248,6 +1213,7 @@ MonoBehaviour:
   - {fileID: 3321224121204711991}
   orderCompleteAudioSource: {fileID: 4958151348520008572}
   orderWrongAudioSource: {fileID: 5130211272011889465}
+  orderDistanceThreshold: 5
 --- !u!114 &8175749817383671125
 MonoBehaviour:
   m_ObjectHideFlags: 0

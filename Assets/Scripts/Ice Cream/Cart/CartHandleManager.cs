@@ -20,8 +20,9 @@ public class CartHandleManager : MonoBehaviour
 
     private List<Child> objectLastTransforms = new();
 
-    private Vector3 lastPosition;
-    private Quaternion lastRotation;
+    private Vector3 initialLocalPosition;
+    private Vector3 lastLocalPosition;
+    private Quaternion lastLocalRotation;
 
     private XRGrabInteractable grabInteractable;
 
@@ -29,8 +30,10 @@ public class CartHandleManager : MonoBehaviour
     {
         grabInteractable = GetComponent<XRGrabInteractable>();
 
-        lastPosition = transform.position;
-        lastRotation = transform.rotation;
+        initialLocalPosition = transform.localPosition;
+
+        lastLocalPosition = transform.localPosition;
+        lastLocalRotation = transform.localRotation;
 
         SaveCurrentTransforms();
     }
@@ -94,14 +97,14 @@ public class CartHandleManager : MonoBehaviour
 
     private void Update()
     {
-        bool transformed = Vector3.Distance(transform.position, lastPosition) > GlobalThresholds.EPS
-            || Quaternion.Angle(transform.rotation, lastRotation) > 10 * GlobalThresholds.EPS;
+        bool transformed = Vector3.Distance(transform.localPosition, lastLocalPosition) > GlobalThresholds.EPS
+            || Quaternion.Angle(transform.localRotation, lastLocalRotation) > 10 * GlobalThresholds.EPS;
 
-        if (transformed && !cartAudioSources.Any(audioSource => audioSource.isPlaying))
+        if (transformed && grabInteractable.isSelected && !cartAudioSources.Any(audioSource => audioSource.isPlaying))
         {
             cartAudioSources.ForEach(audioSource => audioSource.Play());
         }
-        else if (!transformed && cartAudioSources.Any(audioSource => audioSource.isPlaying))
+        else if ((!transformed || !grabInteractable.isSelected) && cartAudioSources.Any(audioSource => audioSource.isPlaying))
         {
             cartAudioSources.ForEach(audioSource => audioSource.Pause());
         }
@@ -117,7 +120,12 @@ public class CartHandleManager : MonoBehaviour
             foreach (var coneManager in coneContainers) coneManager.ToggleConeVisibility(true);
         }
 
-        lastPosition = transform.position;
-        lastRotation = transform.rotation;
+        if (transform.localPosition.y < -10f || Vector3.Magnitude(transform.localPosition) > 1000f)
+        {
+            transform.localPosition = initialLocalPosition;
+        }
+
+        lastLocalPosition = transform.localPosition;
+        lastLocalRotation = transform.localRotation;
     }
 }

@@ -2,26 +2,21 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.XR.Interaction.Toolkit.Interactors;
 using UnityEngine.XR.OpenXR.Features.Meta;
 
 [RequireComponent(typeof(LineRenderer))]
 [RequireComponent(typeof(PhysicalBoundaryVisibilityManager))]
 public class PhysicalBoundaryManager : MonoBehaviour
 {
-    [SerializeField] InputActionReference placeInteraction;
-    [SerializeField] InputActionReference restartFinishInteraction;
+    [SerializeField] InputActionReference adjustBoundaryInteraction;
+    [SerializeField] List<Transform> boundaryPoints = new();
+    [SerializeField] GameObject boundaryCalibrationUI;
 
     PhysicalBoundaryVisibilityManager physicalBoundaryVisibilityManager;
-
-    List<NearFarInteractor> interactors = new();
-    NearFarInteractor cachedActiveInteractor = null;
-    float timeSinceLastInteraction = 0f;
-
     LineRenderer lineRenderer;
-    bool isPlacing = false;
 
-    public List<Vector3> BoundaryPoints { get; private set; } = new();
+    public bool IsPlacing { get; private set; } = false;
+    public List<Transform> BoundaryPoints { get => boundaryPoints; private set => boundaryPoints = value; }
     public Transform BoundaryCenter { get; private set; }
     public float BoundaryRadius { get; private set; }
 
@@ -30,94 +25,70 @@ public class PhysicalBoundaryManager : MonoBehaviour
         lineRenderer = GetComponent<LineRenderer>();
         physicalBoundaryVisibilityManager = GetComponent<PhysicalBoundaryVisibilityManager>();
 
-        if (isPlacing == false)
+        lineRenderer.positionCount = boundaryPoints.Count;
+
+        for (int i = 0; i < boundaryPoints.Count; i++)
         {
-            Vector3[] positions = new Vector3[lineRenderer.positionCount];
-            lineRenderer.GetPositions(positions);
-            BoundaryPoints = positions.ToList();
-            FinishPlacement(new InputAction.CallbackContext());
-        }
-        else
-        {
-            RestartPlacement(new InputAction.CallbackContext());
+            float x = PlayerPrefs.GetFloat($"BoundaryPoint_{i}_X", boundaryPoints[i].localPosition.x);
+            float z = PlayerPrefs.GetFloat($"BoundaryPoint_{i}_Z", boundaryPoints[i].localPosition.z);
+
+            boundaryPoints[i].localPosition = new Vector3(x, 1, z);
         }
 
-        interactors = FindObjectsByType<NearFarInteractor>(
-            FindObjectsInactive.Include, FindObjectsSortMode.None
-        ).ToList();
-
-        placeInteraction.action.performed += PlacePoint;
-        restartFinishInteraction.action.performed += RestartFinishPlacement;
-    }
-
-    void OnDestroy()
-    {
-        placeInteraction.action.performed -= PlacePoint;
-        restartFinishInteraction.action.performed -= RestartFinishPlacement;
+        AdjustBoundary(new InputAction.CallbackContext());
+        adjustBoundaryInteraction.action.Enable();
     }
 
     void Update()
     {
-        var interactor = GetActiveInteractor();
+        if (adjustBoundaryInteraction.action.WasPressedThisFrame())
+        {
+            AdjustBoundary(new InputAction.CallbackContext());
+        }
 
-        if (interactor == null || !isPlacing) return;
+        if (!IsPlacing) return;
 
-        Ray ray = new(
-            interactor.farInteractionCaster.castOrigin.position,
-            interactor.farInteractionCaster.castOrigin.forward
+        lineRenderer.SetPositions(boundaryPoints.Select(
+            point =>
+            {
+                Vector3 localPosition = transform.InverseTransformPoint(point.position);
+                return new Vector3(localPosition.x, 0, localPosition.z);
+            }).ToArray());
+    }
+
+    void AdjustBoundary(InputAction.CallbackContext ctx)
+    {
+        IsPlacing = !IsPlacing;
+
+        boundaryPoints.ForEach(point =>
+        {
+            point.gameObject.SetActive(IsPlacing);
+            point.SetParent(transform);
+        });
+        // lineRenderer.enabled = IsPlacing;
+        boundaryCalibrationUI.SetActive(IsPlacing);
+        physicalBoundaryVisibilityManager.SetBoundaryVisibility(
+            IsPlacing ? XrBoundaryVisibility.VisibilityNotSuppressed : XrBoundaryVisibility.VisibilitySuppressed
         );
-        if (!Physics.Raycast(ray, out RaycastHit hit)) return;
 
-        Vector3 placePos = transform.InverseTransformPoint(new(hit.point.x, 0.1f, hit.point.z));
-        BoundaryPoints[^1] = placePos;
+        if (IsPlacing) return;
 
-        PlaceBoundary();
-
-        timeSinceLastInteraction += Time.deltaTime;
-    }
-
-    void RestartFinishPlacement(InputAction.CallbackContext ctx)
-    {
-        if (isPlacing)
-        {
-            FinishPlacement(ctx);
-        }
-        else
-        {
-            RestartPlacement(ctx);
-        }
-    }
-
-    void RestartPlacement(InputAction.CallbackContext ctx)
-    {
-        isPlacing = true;
-        physicalBoundaryVisibilityManager.SetBoundaryVisibility(XrBoundaryVisibility.VisibilityNotSuppressed);
-
-        BoundaryPoints.Clear();
-        BoundaryPoints.Add(Vector3.zero);
-
-        lineRenderer.loop = false;
-        PlaceBoundary();
-    }
-
-    void FinishPlacement(InputAction.CallbackContext ctx)
-    {
-        isPlacing = false;
-        physicalBoundaryVisibilityManager.SetBoundaryVisibility(XrBoundaryVisibility.VisibilitySuppressed);
+        var boundaryPositions = boundaryPoints.Select(point => point.position).ToArray();
 
         if (BoundaryCenter == null)
         {
             BoundaryCenter = new GameObject("Physical Boundary Center").transform;
             BoundaryCenter.parent = transform;
         }
-        BoundaryCenter.localPosition =
-            BoundaryPoints.Aggregate(Vector3.zero, (acc, point) => acc + point) / BoundaryPoints.Count;
+        BoundaryCenter.localPosition = boundaryPositions.Aggregate(
+            Vector3.zero, (acc, point) => acc + point
+        ) / boundaryPoints.Count;
 
         BoundaryRadius = float.MaxValue;
-        for (int i = 0; i < BoundaryPoints.Count; i++)
+        for (int i = 0; i < boundaryPositions.Length; i++)
         {
-            Vector3 pointA = BoundaryPoints[i];
-            Vector3 pointB = BoundaryPoints[(i + 1) % BoundaryPoints.Count];
+            Vector3 pointA = boundaryPositions[i];
+            Vector3 pointB = boundaryPositions[(i + 1) % boundaryPositions.Length];
 
             // Calculate distance from center to edge AB
             Vector3 lineDir = (pointB - pointA).normalized;
@@ -129,44 +100,10 @@ public class PhysicalBoundaryManager : MonoBehaviour
             BoundaryRadius = Mathf.Min(BoundaryRadius, dist);
         }
 
-        lineRenderer.loop = true;
-    }
-
-    void PlacePoint(InputAction.CallbackContext ctx)
-    {
-        if (
-            !isPlacing ||
-            timeSinceLastInteraction < (float)GlobalThresholds.INTERACTION_ACTIVE_DEBOUNCE.TotalSeconds
-        ) return;
-
-        timeSinceLastInteraction = 0f;
-        BoundaryPoints.Add(Vector3.zero);
-    }
-
-    void PlaceBoundary()
-    {
-        lineRenderer.positionCount = BoundaryPoints.Count;
-        lineRenderer.SetPositions(BoundaryPoints.ToArray());
-    }
-
-    NearFarInteractor GetActiveInteractor()
-    {
-        if (cachedActiveInteractor != null && cachedActiveInteractor.gameObject.activeInHierarchy)
+        for (int i = 0; i < boundaryPoints.Count; i++)
         {
-            return cachedActiveInteractor;
+            PlayerPrefs.SetFloat($"BoundaryPoint_{i}_X", boundaryPoints[i].localPosition.x);
+            PlayerPrefs.SetFloat($"BoundaryPoint_{i}_Z", boundaryPoints[i].localPosition.z);
         }
-
-        var activeInteractors = interactors.FindAll(
-            interactor => interactor.gameObject.activeInHierarchy
-        );
-
-        if (activeInteractors.Count < 1) return null;
-        if (activeInteractors.Count == 1) return activeInteractors[0];
-
-        cachedActiveInteractor = activeInteractors.FirstOrDefault(
-            interactor => interactor.handedness == InteractorHandedness.Right
-        ) ?? activeInteractors[0];
-
-        return cachedActiveInteractor;
     }
 }

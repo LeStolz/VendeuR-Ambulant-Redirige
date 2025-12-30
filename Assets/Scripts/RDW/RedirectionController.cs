@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Collections;
 using TMPro;
 using UnityEngine;
@@ -12,6 +11,7 @@ public class RedirectionController : MonoBehaviour
     [Header("References")]
     [SerializeField] new Transform camera;
     [SerializeField] Transform virtualWorld;
+    [SerializeField] Transform cart;
 
     [Header("Translation Gain")]
     [SerializeField] float headingToCenterDotThreshold = 0.45f;
@@ -34,23 +34,36 @@ public class RedirectionController : MonoBehaviour
     private float startVirtualLocalYaw = 0f;
     private float startVirtualWorldYaw = 0f;
 
-    [Header("Steer-to Action")]
-    [SerializeField] float minRotationThreshold = -6.8f;
-    [SerializeField] float maxRotationThreshold = 10f;
+    [Header("Steer-to-Action")]
+    [SerializeField] float minS2ARotationThreshold = 10f;
+    [SerializeField] float maxS2ARotationThreshold = 10f;
     [SerializeField] float timeToCompleteSteer = 2f;
 
     PhysicalBoundaryManager physicalBoundaryManager;
     Vector3 RealWorldOrigin => physicalBoundaryManager.BoundaryCenter.position;
     float RealWorldRadius => physicalBoundaryManager.BoundaryRadius;
     float SafeRealWorldRadius => RealWorldRadius * 0.2f;
+    float DistractorRealWorldRadius => RealWorldRadius * 0.8f;
     float DangerRealWorldRadius => RealWorldRadius * 1f;
 
-    List<Customer> customers;
-
+    Vector3 camPos;
+    Vector3 center;
     Vector3 toCenter;
+    float distToCenter;
+    float centerYaw;
+    float yawToRotateToFaceCenter;
+    Vector3 translationDelta;
+    Vector3 translation;
+    float headingToCenterDot;
+
     Vector3 prevPos;
     float prevYaw;
     float prevYawToRotateToFaceCenter;
+
+    Vector3 target;
+    Vector3 toTarget;
+    float yawToRotateToFaceTarget;
+    float prevYawToRotateToFaceTarget;
 
     void Awake()
     {
@@ -68,7 +81,6 @@ public class RedirectionController : MonoBehaviour
     void Start()
     {
         physicalBoundaryManager = GetComponent<PhysicalBoundaryManager>();
-        customers = CustomerSpawnerManager.Instance.existingCustomers;
 
         prevPos = camera.position;
         prevYaw = camera.eulerAngles.y;
@@ -76,45 +88,53 @@ public class RedirectionController : MonoBehaviour
 
     void Update()
     {
-        Vector3 camPos = new(camera.position.x, 0, camera.position.z);
-        Vector3 center = new(RealWorldOrigin.x, 0, RealWorldOrigin.z);
+        if (physicalBoundaryManager.IsPlacing) return;
+
+        camPos = new(camera.position.x, 0, camera.position.z);
+        center = new(RealWorldOrigin.x, 0, RealWorldOrigin.z);
 
         toCenter = (center - camPos).normalized;
-        float distToCenter = Vector3.Distance(camPos, center);
-        float centerYaw = SignedAngleOnXZ(Vector3.forward, toCenter);
-        float yawToRotateToFaceCenter = Mathf.DeltaAngle(camera.eulerAngles.y, centerYaw);
+        distToCenter = Vector3.Distance(camPos, center);
+        centerYaw = SignedAngleOnXZ(Vector3.forward, toCenter);
+        yawToRotateToFaceCenter = Mathf.DeltaAngle(camera.eulerAngles.y, centerYaw);
 
-        // Vector3 translationDelta = camPos - new Vector3(prevPos.x, 0, prevPos.z);
-        // Vector3 translation = translationDelta.normalized;
+        translationDelta = camPos - new Vector3(prevPos.x, 0, prevPos.z);
+        translation = translationDelta.normalized;
+        headingToCenterDot = Vector3.Dot(translation, toCenter);
 
-        // float headingToCenterDot = Vector3.Dot(translation, toCenter);
+        if (target != default)
+        {
+            toTarget = (target - camPos).normalized;
+            yawToRotateToFaceTarget = Vector3.SignedAngle(toCenter, toTarget, Vector3.up);
+        }
 
-        // ResetRotation(distToCenter, headingToCenterDot, translationDelta);
-        // if (isResetting)
-        // {
-        //     UpdatePrevTransform(yawToRotateToFaceCenter);
-        //     return;
-        // }
+        ResetRotation();
+        if (isResetting)
+        {
+            UpdatePrevTransform();
+            return;
+        }
+        else
+        {
+            Distract();
+        }
 
-        // float translationGain = ComputeTranslationGain(translationDelta, headingToCenterDot, distToCenter);
-        // float rotationGain = ComputeRotationGain(distToCenter, prevYawToRotateToFaceCenter, yawToRotateToFaceCenter);
-        // float curvatureGain = ComputeStillAndCurvatureGain(yawToRotateToFaceCenter, translationDelta);
+        ApplyTranslationGain(ComputeTranslationGain());
+        ApplyRotationGain(ComputeRotationGain());
+        ApplyStillAndCurvatureGain(ComputeStillAndCurvatureGain());
 
-        // ApplyTranslationGain(translationGain, translationDelta);
-        // ApplyRotationGain(rotationGain);
-        // ApplyStillAndCurvatureGain(curvatureGain);
-
-        // UpdatePrevTransform(yawToRotateToFaceCenter);
+        UpdatePrevTransform();
     }
 
-    private void UpdatePrevTransform(float yawToRotateToFaceCenter)
+    private void UpdatePrevTransform()
     {
         prevPos = camera.position;
         prevYaw = camera.eulerAngles.y;
         prevYawToRotateToFaceCenter = yawToRotateToFaceCenter;
+        prevYawToRotateToFaceTarget = yawToRotateToFaceTarget;
     }
 
-    float ComputeTranslationGain(Vector3 translation, float headingToCenterDot, float distToCenter)
+    float ComputeTranslationGain()
     {
         if (translation.magnitude < GlobalThresholds.EPS)
             return 0;
@@ -139,21 +159,32 @@ public class RedirectionController : MonoBehaviour
         return extraGain;
     }
 
-    void ApplyTranslationGain(float gain, Vector3 delta)
+    void ApplyTranslationGain(float gain)
     {
-        Vector3 modified = delta * gain;
+        Vector3 modified = translationDelta * gain;
 
-        virtualWorld.position -= modified - delta;
+        virtualWorld.position -= modified - translationDelta;
     }
 
-    float ComputeRotationGain(float distToCenter, float prevYawToRotateToGetToCenter, float yawToRotateToFaceCenter)
+    bool prevMinRotationGainApplied = false;
+    float ComputeRotationGain()
     {
-        float rotation = Mathf.Abs(yawToRotateToFaceCenter) - Mathf.Abs(prevYawToRotateToGetToCenter);
+        float rotation = Mathf.Abs(yawToRotateToFaceCenter) - Mathf.Abs(prevYawToRotateToFaceCenter);
 
         if (Mathf.Abs(rotation) < GlobalThresholds.EPS)
             return 1;
 
-        float extraGain = (rotation > 0) ? minExtraRotationGain : -maxExtraRotationGain;
+        float extraGain = rotation > 0 ? minExtraRotationGain : -maxExtraRotationGain;
+        if (target != default)
+        {
+            if (Mathf.Abs(yawToRotateToFaceTarget) - Mathf.Abs(prevYawToRotateToFaceTarget) > GlobalThresholds.EPS)
+                prevMinRotationGainApplied = !prevMinRotationGainApplied;
+
+            if (prevMinRotationGainApplied)
+                extraGain = rotation > 0 ? -maxExtraRotationGain : minExtraRotationGain;
+            else
+                extraGain = rotation > 0 ? minExtraRotationGain : -maxExtraRotationGain;
+        }
 
         extraGain *= Mathf.InverseLerp(0, RealWorldRadius, distToCenter);
 
@@ -169,14 +200,13 @@ public class RedirectionController : MonoBehaviour
         virtualWorld.RotateAround(camera.position, Vector3.up, modified - deltaYaw);
     }
 
-    float ComputeStillAndCurvatureGain(float yawToRotate, Vector3 translationDelta)
+    float ComputeStillAndCurvatureGain()
     {
-        if (Mathf.Abs(yawToRotate) < GlobalThresholds.ANG_EPS)
+        if (Mathf.Abs(yawToRotateToFaceCenter) < GlobalThresholds.ANG_EPS)
             return 0;
 
-        var direction =
-        0 < yawToRotate ||
-        yawToRotate >= 160 || yawToRotate <= -160 ? 1 : -1;
+        var direction = 0 < yawToRotateToFaceCenter ||
+            yawToRotateToFaceCenter >= 160 || yawToRotateToFaceCenter <= -160 ? 1 : -1;
 
         float curvatureGain = 1 / minCurvatureGainRadius;
         float speed = translationDelta.magnitude;
@@ -197,7 +227,7 @@ public class RedirectionController : MonoBehaviour
         return Vector3.SignedAngle(a, b, Vector3.up);
     }
 
-    void ResetRotation(float distToCenter, float headingToCenterDot, Vector3 translationDelta)
+    void ResetRotation()
     {
         if (isResetting)
         {
@@ -252,52 +282,74 @@ public class RedirectionController : MonoBehaviour
         );
     }
 
-    public void StarSteerToAction()
+    private void Distract()
     {
-        Vector3 camPos = new(camera.position.x, 0, camera.position.z);
-        Vector3 center = new(RealWorldOrigin.x, 0, RealWorldOrigin.z);
+        if (distToCenter < DistractorRealWorldRadius) return;
 
-        if (Vector3.Distance(camPos, center) < GlobalThresholds.EPS)
+        Customer newCustomer = CustomerSpawnerManager.Instance.SpawnCustomer(center);
+
+        if (newCustomer == null) return;
+
+        Transform distractor = newCustomer.transform.Find("Distractor");
+        if (distractor != null)
         {
-            return;
+            distractor.gameObject.SetActive(true);
         }
-
-        (Customer nearestCustomer, Customer secondNearestCustomer) = GetTwoNearestCustomers();
-
-        Transform parentOfNearestCustomer = nearestCustomer.transform.parent;
-        ChangeParentOfCustomer(nearestCustomer, virtualWorld);
-
-        Vector3 secondNearestCustomerPos = new(secondNearestCustomer.transform.position.x, 0, secondNearestCustomer.transform.position.z);
-        Vector3 toCustomer = (secondNearestCustomerPos - camPos).normalized;
-
-        float angle = Vector3.SignedAngle(toCenter, toCustomer, Vector3.up);
-
-        if (angle > 0)
-        {
-            angle = Mathf.Min(angle, maxRotationThreshold);
-        }
-        else if (angle < 0)
-        {
-            angle = Mathf.Max(angle, minRotationThreshold);
-        }
-
-        StartCoroutine(RotateWorldOverTime(angle, timeToCompleteSteer, nearestCustomer, parentOfNearestCustomer));
+        HapticManager.Instance.TriggerFailureHaptic(HapticManager.Hand.Both);
     }
 
-    private void ChangeParentOfCustomer(Customer customer, Transform newParent)
+    public void StartSteerToAction()
     {
-        customer.transform.SetParent(newParent, true);
+        if (distToCenter < GlobalThresholds.EPS) return;
+
+        (Transform nearestCustomer, Transform secondNearestCustomer) = GetTwoNearestCustomers();
+
+        Transform parentOfNearestCustomer = nearestCustomer.parent;
+        Transform parentOfCart = cart.parent;
+        nearestCustomer.SetParent(virtualWorld, true);
+        cart.SetParent(virtualWorld, true);
+
+        target = new(secondNearestCustomer.position.x, 0, secondNearestCustomer.position.z);
+        var toTarget = (target - camPos).normalized;
+
+        yawToRotateToFaceTarget = Vector3.SignedAngle(toCenter, toTarget, Vector3.up);
+        var yawToRotate = Mathf.Clamp(
+            yawToRotateToFaceTarget, -minS2ARotationThreshold, maxS2ARotationThreshold
+        );
+
+        // StartCoroutine(RotateWorldOverTime(
+        //     yawToRotate, timeToCompleteSteer, nearestCustomer, parentOfNearestCustomer, parentOfCart
+        // ));
     }
 
-    private (Customer nearest, Customer secondNearest) GetTwoNearestCustomers()
+    private IEnumerator RotateWorldOverTime(
+        float totalAngle, float duration, Transform customer, Transform originalCustomerParent, Transform originalCartParent
+    )
     {
-        Customer nearest = null;
-        Customer secondNearest = null;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            float delta = totalAngle * Time.deltaTime / duration;
+            virtualWorld.RotateAround(camera.position, Vector3.up, delta);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        customer.transform.SetParent(originalCustomerParent, true);
+        cart.SetParent(originalCartParent, true);
+        target = default;
+    }
+
+    private (Transform nearest, Transform secondNearest) GetTwoNearestCustomers()
+    {
+        Transform nearest = null;
+        Transform secondNearest = null;
 
         float minDist1 = float.MaxValue;
         float minDist2 = float.MaxValue;
 
-        foreach (var customer in customers)
+        foreach (var customer in CustomerSpawnerManager.Instance.ExistingCustomers)
         {
             float d = Vector3.Distance(customer.transform.position, camera.position);
 
@@ -307,42 +359,15 @@ public class RedirectionController : MonoBehaviour
                 secondNearest = nearest;
 
                 minDist1 = d;
-                nearest = customer;
+                nearest = customer.transform;
             }
             else if (d < minDist2)
             {
                 minDist2 = d;
-                secondNearest = customer;
+                secondNearest = customer.transform;
             }
         }
 
         return (nearest, secondNearest);
-    }
-
-    private IEnumerator RotateWorldOverTime(float totalAngle, float duration, Customer customer, Transform originalParent)
-    {
-        float elapsed = 0f;
-
-        while (elapsed < duration)
-        {
-            float delta = (totalAngle * Time.deltaTime) / duration;
-            virtualWorld.RotateAround(camera.position, Vector3.up, delta);
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
-
-        ChangeParentOfCustomer(customer, originalParent);
-    }
-
-    private void Distractor()
-    {
-        Vector3 center = new(RealWorldOrigin.x, 0, RealWorldOrigin.z);
-        Customer newCustomer = CustomerSpawnerManager.Instance.SpawnCustomerAtPosition(center);
-        
-        Transform distractor = newCustomer.transform.Find("Distractor");
-        if (distractor != null)
-        {
-            distractor.gameObject.SetActive(true);
-        }
     }
 }
