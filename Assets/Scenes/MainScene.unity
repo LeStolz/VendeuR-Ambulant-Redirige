@@ -24381,7 +24381,7 @@ MonoBehaviour:
   extraStillRotationGain: 0.001
   maxExtraRotationGain: 0.49
   minExtraRotationGain: 0.2
-  minCurvatureGainRadius: 22
+  minCurvatureGainRadius: 0.5
   resetWarningUI: {fileID: 5648130919560522130}
   resetWarningAngleLeftUI: {fileID: 1582255705}
   minS2ARotationThreshold: 10
@@ -35614,7 +35614,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3051491437750746931, guid: 77e7c27b2c5525e4aa8cc9f99d654486, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3359539261843778952, guid: 77e7c27b2c5525e4aa8cc9f99d654486, type: 3}
       propertyPath: m_EnableFarCasting
