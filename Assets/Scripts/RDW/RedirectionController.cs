@@ -333,4 +333,16 @@ public class RedirectionController : MonoBehaviour
 
         ChangeParentOfCustomer(customer, originalParent);
     }
+
+    private void Distractor()
+    {
+        Vector3 center = new(RealWorldOrigin.x, 0, RealWorldOrigin.z);
+        Customer newCustomer = CustomerSpawnerManager.Instance.SpawnCustomerAtPosition(center);
+        
+        Transform distractor = newCustomer.transform.Find("Distractor");
+        if (distractor != null)
+        {
+            distractor.gameObject.SetActive(true);
+        }
+    }
 }

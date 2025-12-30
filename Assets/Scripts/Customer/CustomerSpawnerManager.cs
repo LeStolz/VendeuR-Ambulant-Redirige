@@ -99,4 +99,22 @@ public class CustomerSpawnerManager : MonoBehaviour
         Destroy(customer.gameObject);
         SpawnCustomer();
     }
+
+    public Customer SpawnCustomerAtPosition(Vector3 position)
+    {
+        var randomCustomer = customerPrefabs[Random.Range(0, customerPrefabs.Count)];
+        var randomCustomerRotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
+        var randomCustomerColor = Random.ColorHSV();
+
+        var customer = Instantiate(
+            randomCustomer,
+            position + Vector3.up * randomCustomer.transform.localScale.y,
+            randomCustomerRotation
+        );
+
+        customer.GetComponentInChildren<Renderer>().material.color = randomCustomerColor;
+        existingCustomers.Add(customer);
+        
+        return customer;
+    }
 }
