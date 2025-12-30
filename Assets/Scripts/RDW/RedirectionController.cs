@@ -317,9 +317,9 @@ public class RedirectionController : MonoBehaviour
             yawToRotateToFaceTarget, -minS2ARotationThreshold, maxS2ARotationThreshold
         );
 
-        // StartCoroutine(RotateWorldOverTime(
-        //     yawToRotate, timeToCompleteSteer, nearestCustomer, parentOfNearestCustomer, parentOfCart
-        // ));
+        StartCoroutine(RotateWorldOverTime(
+            yawToRotate, timeToCompleteSteer, nearestCustomer, parentOfNearestCustomer, parentOfCart
+        ));
     }
 
     private IEnumerator RotateWorldOverTime(
