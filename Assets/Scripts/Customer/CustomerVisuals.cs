@@ -18,7 +18,6 @@ public class CustomerVisuals : MonoBehaviour
 
 	[SerializeField] GameObject orderDisplayUI;
 	[SerializeField] GameObject alertUI;
-	CustomerOrderTrigger customerOrderTrigger;
 
 	void Start()
 	{
@@ -29,18 +28,9 @@ public class CustomerVisuals : MonoBehaviour
 			initialEyeLocalPositions.Add(eye.transform.localPosition);
 			eyeMaxOffset = eye.transform.parent.localScale.x * (1 - eye.transform.localScale.x / 1.7f);
 		}
-
-		customerOrderTrigger = GetComponentInChildren<CustomerOrderTrigger>();
-
-		customerOrderTrigger.OnPlayerEnterRange += HandlePlayerEnterRange;
-		customerOrderTrigger.OnPlayerExitRange += HandlePlayerExitRange;
 	}
 
-	void OnDestroy()
-	{
-		customerOrderTrigger.OnPlayerEnterRange -= HandlePlayerEnterRange;
-		customerOrderTrigger.OnPlayerExitRange -= HandlePlayerExitRange;
-	}
+
 
 	IEnumerator SetNormalEmotionAfterDelay(float delay)
 	{
@@ -62,13 +52,13 @@ public class CustomerVisuals : MonoBehaviour
 		}
 	}
 
-	void HandlePlayerEnterRange()
+	public void HandlePlayerEnterRange()
 	{
 		orderDisplayUI.SetActive(true);
 		alertUI.SetActive(false);
 	}
 
-	void HandlePlayerExitRange()
+	public void HandlePlayerExitRange()
 	{
 		orderDisplayUI.SetActive(false);
 		alertUI.SetActive(true);

@@ -7,24 +7,37 @@ using UnityEngine.UI;
 public class Customer : MonoBehaviour
 {
     CustomerOrderSO order;
-    CustomerOrderTrigger customerOrderTrigger;
     CustomerVisuals customerVisuals;
 
     [SerializeField] List<GameObject> orderComponentDisplays;
     [SerializeField] AudioSource orderCompleteAudioSource;
     [SerializeField] AudioSource orderWrongAudioSource;
+    [SerializeField] float orderDistanceThreshold = 5f;
+
+    Transform target;
+    bool orderGiven = false;
 
     void Start()
     {
         order = GenerateRandomOrder();
         customerVisuals = GetComponent<CustomerVisuals>();
-        customerOrderTrigger = GetComponentInChildren<CustomerOrderTrigger>();
-        customerOrderTrigger.OnPlayerEnterRange += HandlePlayerEnterRange;
+
+        target = Camera.main.transform;
     }
 
-    void OnDestroy()
+    void Update()
     {
-        customerOrderTrigger.OnPlayerEnterRange -= HandlePlayerEnterRange;
+        if (!orderGiven && Vector3.Distance(target.position, transform.position) < orderDistanceThreshold)
+        {
+            HandlePlayerEnterRange();
+            customerVisuals.HandlePlayerEnterRange();
+            orderGiven = true;
+        }
+        else if (orderGiven && Vector3.Distance(target.position, transform.position) >= orderDistanceThreshold)
+        {
+            customerVisuals.HandlePlayerExitRange();
+            orderGiven = false;
+        }
     }
 
     void HandlePlayerEnterRange()

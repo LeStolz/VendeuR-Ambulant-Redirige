@@ -5,7 +5,7 @@ using UnityEngine.XR.Interaction.Toolkit.Interactables;
 public class SteerToActionTrigger : MonoBehaviour
 {
     [SerializeField] private float timeInterval = 2.1f;
-    [SerializeField] private static float lastTriggerTime  = -Mathf.Infinity;
+    [SerializeField] private static float lastTriggerTime = -Mathf.Infinity;
     private XRGrabInteractable xrGrabInteractable;
 
     void Start()
@@ -21,7 +21,7 @@ public class SteerToActionTrigger : MonoBehaviour
             return;
         }
         lastTriggerTime = Time.time;
-        RedirectionController.Instance.StarSteerToAction();
+        RedirectionController.Instance.StartSteerToAction();
     }
 
     private void OnDestroy()

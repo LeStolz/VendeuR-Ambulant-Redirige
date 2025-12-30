@@ -8,6 +8,8 @@ TagManager:
   - Road
   - cone
   - Spoon
+  - LeftHand
+  - RightHand
   layers:
   - Default
   - TransparentFX
