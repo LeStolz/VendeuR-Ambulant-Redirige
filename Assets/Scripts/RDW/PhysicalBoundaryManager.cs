@@ -6,27 +6,29 @@ using UnityEngine.XR.OpenXR.Features.Meta;
 
 [RequireComponent(typeof(LineRenderer))]
 [RequireComponent(typeof(PhysicalBoundaryVisibilityManager))]
+[RequireComponent(typeof(RedirectionController))]
 public class PhysicalBoundaryManager : MonoBehaviour
 {
     [SerializeField] InputActionReference adjustBoundaryInteraction;
     [SerializeField] List<Transform> boundaryPoints = new();
     [SerializeField] GameObject boundaryCalibrationUI;
 
+    RedirectionController redirectionController;
     PhysicalBoundaryVisibilityManager physicalBoundaryVisibilityManager;
     LineRenderer lineRenderer;
 
     public bool IsPlacing { get; private set; } = false;
-    public List<Transform> BoundaryPoints { get => boundaryPoints; private set => boundaryPoints = value; }
     public Transform BoundaryCenter { get; private set; }
-    public float BoundaryRadius { get; private set; }
 
     void Awake()
     {
         lineRenderer = GetComponent<LineRenderer>();
         physicalBoundaryVisibilityManager = GetComponent<PhysicalBoundaryVisibilityManager>();
+        redirectionController = GetComponent<RedirectionController>();
 
         lineRenderer.positionCount = boundaryPoints.Count;
 
+        PlayerPrefs.DeleteAll(); // TEMPORARY: Clear saved boundary points for testing
         for (int i = 0; i < boundaryPoints.Count; i++)
         {
             float x = PlayerPrefs.GetFloat($"BoundaryPoint_{i}_X", boundaryPoints[i].localPosition.x);
@@ -65,7 +67,9 @@ public class PhysicalBoundaryManager : MonoBehaviour
             point.gameObject.SetActive(IsPlacing);
             point.SetParent(transform);
         });
+
         // lineRenderer.enabled = IsPlacing;
+
         boundaryCalibrationUI.SetActive(IsPlacing);
         physicalBoundaryVisibilityManager.SetBoundaryVisibility(
             IsPlacing ? XrBoundaryVisibility.VisibilityNotSuppressed : XrBoundaryVisibility.VisibilitySuppressed
@@ -84,26 +88,40 @@ public class PhysicalBoundaryManager : MonoBehaviour
             Vector3.zero, (acc, point) => acc + point
         ) / boundaryPoints.Count;
 
-        BoundaryRadius = float.MaxValue;
-        for (int i = 0; i < boundaryPositions.Length; i++)
-        {
-            Vector3 pointA = boundaryPositions[i];
-            Vector3 pointB = boundaryPositions[(i + 1) % boundaryPositions.Length];
-
-            // Calculate distance from center to edge AB
-            Vector3 lineDir = (pointB - pointA).normalized;
-            Vector3 AtoCenter = BoundaryCenter.position - pointA;
-            Vector3 AtoCenterProjected = Vector3.Project(AtoCenter, lineDir);
-            Vector3 closestPoint = pointA + AtoCenterProjected;
-            float dist = Vector3.Distance(BoundaryCenter.position, closestPoint);
-
-            BoundaryRadius = Mathf.Min(BoundaryRadius, dist);
-        }
 
         for (int i = 0; i < boundaryPoints.Count; i++)
         {
             PlayerPrefs.SetFloat($"BoundaryPoint_{i}_X", boundaryPoints[i].localPosition.x);
             PlayerPrefs.SetFloat($"BoundaryPoint_{i}_Z", boundaryPoints[i].localPosition.z);
         }
+
+        redirectionController.UpdateCurvatureGain(GetDistanceToBoundary(BoundaryCenter.position));
+    }
+
+    public float GetDistanceToBoundary(Vector3 position)
+    {
+        var boundaryPositions = boundaryPoints.Select(point => point.position).ToArray();
+        var minDistance = float.MaxValue;
+
+        for (int i = 0; i < boundaryPositions.Length; i++)
+        {
+            Vector3 pointA = boundaryPositions[i];
+            Vector3 pointB = boundaryPositions[(i + 1) % boundaryPositions.Length];
+            pointA.y = position.y;
+            pointB.y = position.y;
+
+            // Calculate distance from center to edge AB
+            Vector3 lineDir = (pointB - pointA).normalized;
+            Vector3 AtoCenter = position - pointA;
+            Vector3 AtoCenterProjected = Vector3.Project(AtoCenter, lineDir);
+            Vector3 closestPoint = pointA + AtoCenterProjected;
+            float dist = Vector3.Distance(position, closestPoint);
+            float sign = Vector3.Dot(Vector3.Cross(lineDir, AtoCenter), Vector3.up) < 0 ? 1f : -1f;
+            dist *= sign;
+
+            minDistance = Mathf.Min(minDistance, dist);
+        }
+
+        return minDistance;
     }
 }

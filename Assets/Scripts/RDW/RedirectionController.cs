@@ -41,10 +41,9 @@ public class RedirectionController : MonoBehaviour
 
     PhysicalBoundaryManager physicalBoundaryManager;
     Vector3 RealWorldOrigin => physicalBoundaryManager.BoundaryCenter.position;
-    float RealWorldRadius => physicalBoundaryManager.BoundaryRadius;
-    float SafeRealWorldRadius => RealWorldRadius * 0.2f;
-    float DistractorRealWorldRadius => RealWorldRadius * 0.8f;
-    float DangerRealWorldRadius => RealWorldRadius * 1f;
+    float RealWorldRadius => physicalBoundaryManager.GetDistanceToBoundary(RealWorldOrigin);
+    float SafeDistance => RealWorldRadius * 0.2f;
+    float DistractorDistance => RealWorldRadius * 0.1f;
 
     Vector3 camPos;
     Vector3 center;
@@ -126,6 +125,11 @@ public class RedirectionController : MonoBehaviour
         UpdatePrevTransform();
     }
 
+    public void UpdateCurvatureGain(float radius)
+    {
+        minCurvatureGainRadius = radius;
+    }
+
     private void UpdatePrevTransform()
     {
         prevPos = camera.position;
@@ -140,11 +144,11 @@ public class RedirectionController : MonoBehaviour
             return 0;
 
         float extraGain;
-        if (distToCenter <= SafeRealWorldRadius && headingToCenterDot > headingToCenterDotThreshold)
+        if (distToCenter <= SafeDistance && headingToCenterDot > headingToCenterDotThreshold)
         {
             extraGain = minExtraTranslationGain;
         }
-        else if (distToCenter >= SafeRealWorldRadius && headingToCenterDot > headingToCenterDotThreshold)
+        else if (distToCenter >= SafeDistance && headingToCenterDot > headingToCenterDotThreshold)
         {
             extraGain = 0;
         }
@@ -236,7 +240,7 @@ public class RedirectionController : MonoBehaviour
         }
 
         if (
-            distToCenter >= DangerRealWorldRadius &&
+            physicalBoundaryManager.GetDistanceToBoundary(camPos) <= 0 &&
             (
                 translationDelta.magnitude > 5 * GlobalThresholds.EPS ||
                 translationDelta.magnitude > GlobalThresholds.EPS &&
@@ -284,7 +288,7 @@ public class RedirectionController : MonoBehaviour
 
     private void Distract()
     {
-        if (distToCenter < DistractorRealWorldRadius) return;
+        if (physicalBoundaryManager.GetDistanceToBoundary(camPos) > DistractorDistance) return;
 
         Customer newCustomer = CustomerSpawnerManager.Instance.SpawnCustomer(center);
 

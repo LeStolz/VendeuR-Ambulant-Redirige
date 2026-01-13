@@ -109,7 +109,7 @@ public class CartHandleManager : MonoBehaviour
             cartAudioSources.ForEach(audioSource => audioSource.Pause());
         }
 
-        if (transformed || grabInteractable.isSelected)
+        if (grabInteractable.isSelected)
         {
             foreach (var coneManager in coneContainers) coneManager.ToggleConeVisibility(false);
             LockMotions();

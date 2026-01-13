@@ -2606,7 +2606,7 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Primary",
+                    "name": "Menu",
                     "type": "Button",
                     "id": "20195c6b-5431-40eb-8268-12eff00773c4",
                     "expectedControlType": "",
@@ -3003,12 +3003,34 @@
                 },
                 {
                     "name": "",
-                    "id": "ff3bf517-854c-4287-ac9f-f4a123a9c930",
-                    "path": "<XRController>/{PrimaryButton}",
+                    "id": "2b929957-ff05-4ef9-a9eb-4a99cff24446",
+                    "path": "*/{MenuButton}",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Primary",
+                    "action": "Menu",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "5f49755e-2194-4c90-8621-b406d22ffc30",
+                    "path": "*/{MenuTouch}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Menu",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "568e2502-fed8-40da-906c-ed8713acd678",
+                    "path": "<XRSimulatedController>/secondaryButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Menu",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
