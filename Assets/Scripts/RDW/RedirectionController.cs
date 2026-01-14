@@ -206,7 +206,10 @@ public class RedirectionController : MonoBehaviour
 
     float ComputeStillAndCurvatureGain()
     {
-        if (Mathf.Abs(yawToRotateToFaceCenter) < GlobalThresholds.ANG_EPS)
+        if (
+            Mathf.Abs(yawToRotateToFaceCenter) < GlobalThresholds.ANG_EPS ||
+            translationDelta.magnitude < GlobalThresholds.EPS
+        )
             return 0;
 
         var direction = 0 < yawToRotateToFaceCenter ||
@@ -313,7 +316,11 @@ public class RedirectionController : MonoBehaviour
         nearestCustomer.SetParent(virtualWorld, true);
         cart.SetParent(virtualWorld, true);
 
-        target = new(secondNearestCustomer.position.x, 0, secondNearestCustomer.position.z);
+        if (secondNearestCustomer != null)
+        {
+            target = new(secondNearestCustomer.position.x, 0, secondNearestCustomer.position.z);
+        }
+
         var toTarget = (target - camPos).normalized;
 
         yawToRotateToFaceTarget = Vector3.SignedAngle(toCenter, toTarget, Vector3.up);

@@ -81,6 +81,14 @@ public class CustomerSpawnerManager : MonoBehaviour
             }
         else
         {
+            if (experimentalMode && ExistingCustomers.Exists(customer => Vector3.Distance(
+                    customer.transform.position, position
+                ) < 1)
+            )
+            {
+                return null;
+            }
+
             if (!experimentalMode && ExistingCustomers.Exists(customer => Vector3.Distance(
                     customer.transform.position, position
                 ) < minSpawnDistanceFromOtherCustomers)
@@ -123,6 +131,6 @@ public class CustomerSpawnerManager : MonoBehaviour
             yield return null;
         }
 
-        SpawnCustomer();
+        if (!experimentalMode) SpawnCustomer();
     }
 }
