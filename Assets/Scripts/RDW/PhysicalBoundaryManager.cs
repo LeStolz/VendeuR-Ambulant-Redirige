@@ -68,7 +68,7 @@ public class PhysicalBoundaryManager : MonoBehaviour
             point.SetParent(transform);
         });
 
-        // lineRenderer.enabled = IsPlacing;
+        lineRenderer.enabled = IsPlacing;
 
         boundaryCalibrationUI.SetActive(IsPlacing);
         physicalBoundaryVisibilityManager.SetBoundaryVisibility(
@@ -87,7 +87,6 @@ public class PhysicalBoundaryManager : MonoBehaviour
         BoundaryCenter.localPosition = boundaryPositions.Aggregate(
             Vector3.zero, (acc, point) => acc + point
         ) / boundaryPoints.Count;
-
 
         for (int i = 0; i < boundaryPoints.Count; i++)
         {

@@ -127,7 +127,7 @@ public class RedirectionController : MonoBehaviour
 
     public void UpdateCurvatureGain(float radius)
     {
-        minCurvatureGainRadius = radius;
+        minCurvatureGainRadius = radius * 0.7f;
     }
 
     private void UpdatePrevTransform()
@@ -242,7 +242,7 @@ public class RedirectionController : MonoBehaviour
         if (
             physicalBoundaryManager.GetDistanceToBoundary(camPos) <= 0 &&
             (
-                translationDelta.magnitude > 5 * GlobalThresholds.EPS ||
+                translationDelta.magnitude > 10 * GlobalThresholds.EPS ||
                 translationDelta.magnitude > GlobalThresholds.EPS &&
                 Vector3.Dot(camera.forward, translationDelta.normalized) > GlobalThresholds.EPS
             ) &&
@@ -279,7 +279,7 @@ public class RedirectionController : MonoBehaviour
 
         float virtualDeltaYaw = Mathf.DeltaAngle(camera.localEulerAngles.y, startVirtualLocalYaw);
 
-        resetWarningAngleLeftUI.text = $"Please turn {(int)yawToRotate}°.";
+        resetWarningAngleLeftUI.text = $"Please turn {Mathf.Abs((int)yawToRotate)}°.";
 
         virtualWorld.RotateAround(
             camera.position, Vector3.up, -virtualWorld.eulerAngles.y + (virtualDeltaYaw + startVirtualWorldYaw)

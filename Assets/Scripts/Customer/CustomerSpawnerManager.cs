@@ -8,6 +8,7 @@ public class CustomerSpawnerManager : MonoBehaviour
 
     public static CustomerSpawnerManager Instance { get; private set; }
 
+    [SerializeField] bool experimentalMode = false;
     [SerializeField] List<Customer> customerPrefabs;
     [SerializeField] float minSpawnDistanceFromPlayer = 10f;
     [SerializeField] float maxSpawnDistanceFromPlayer = 50f;
@@ -33,18 +34,21 @@ public class CustomerSpawnerManager : MonoBehaviour
     {
         player = GameObject.FindGameObjectWithTag("Player");
 
-        IEnumerator StartCouroutine()
+        if (!experimentalMode)
         {
-            yield return _waitForSeconds0_4;
-
-            bool possibleToSpawn = true;
-            while (ExistingCustomers.Count < minCustomers && possibleToSpawn)
+            IEnumerator StartCouroutine()
             {
-                possibleToSpawn = SpawnCustomer() != null;
-            }
-        }
+                yield return _waitForSeconds0_4;
 
-        StartCoroutine(StartCouroutine());
+                bool possibleToSpawn = true;
+                while (ExistingCustomers.Count < minCustomers && possibleToSpawn)
+                {
+                    possibleToSpawn = SpawnCustomer() != null;
+                }
+            }
+
+            StartCoroutine(StartCouroutine());
+        }
     }
 
     public Customer SpawnCustomer(Vector3 position = default)
@@ -84,6 +88,7 @@ public class CustomerSpawnerManager : MonoBehaviour
 
         var randomCustomer = customerPrefabs[Random.Range(0, customerPrefabs.Count)];
         var randomCustomerPosition =
+            position != default ? segmentPosition + Vector3.up * randomCustomer.transform.localScale.y :
             segmentPosition
             + Vector3.up * randomCustomer.transform.localScale.y
             + Vector3.right * Random.Range(-segmentWidth, segmentWidth)
@@ -112,6 +117,6 @@ public class CustomerSpawnerManager : MonoBehaviour
             yield return null;
         }
 
-        SpawnCustomer();
+        if (!experimentalMode) SpawnCustomer();
     }
 }
