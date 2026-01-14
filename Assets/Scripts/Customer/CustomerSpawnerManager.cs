@@ -57,6 +57,12 @@ public class CustomerSpawnerManager : MonoBehaviour
         var segmentWidth = roadSegments[0].localScale.x * 5f;
         var segmentPosition = position;
 
+        if (experimentalMode)
+        {
+            position = new Vector3(0, 0, 8);
+            segmentPosition = position;
+        }
+
         if (position == default)
             foreach (var segment in roadSegments)
             {
@@ -75,7 +81,7 @@ public class CustomerSpawnerManager : MonoBehaviour
             }
         else
         {
-            if (ExistingCustomers.Exists(customer => Vector3.Distance(
+            if (!experimentalMode && ExistingCustomers.Exists(customer => Vector3.Distance(
                     customer.transform.position, position
                 ) < minSpawnDistanceFromOtherCustomers)
             )
@@ -111,12 +117,12 @@ public class CustomerSpawnerManager : MonoBehaviour
 
     IEnumerator RespawnCustomerCoroutine(Customer customer)
     {
-        while (customer != null && customer.gameObject.transform.position.y > -10f)
+        while (customer != null && customer.gameObject.transform.position.y > -5f)
         {
             customer.gameObject.transform.position += Vector3.down * Time.deltaTime;
             yield return null;
         }
 
-        if (!experimentalMode) SpawnCustomer();
+        SpawnCustomer();
     }
 }

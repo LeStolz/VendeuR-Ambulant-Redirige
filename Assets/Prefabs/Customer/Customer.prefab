@@ -1232,7 +1232,7 @@ MonoBehaviour:
   turnToPlayerMaxThresholdDegrees: 45
   turnToPlayerMinThresholdDegrees: 5
   turningSpeed: 1
-  rotateToPlayerDistance: 15
+  rotateToPlayerDistance: 8
   orderDisplayUI: {fileID: 7735242748091418546}
   alertUI: {fileID: 3623348164579754810}
 --- !u!82 &4958151348520008572

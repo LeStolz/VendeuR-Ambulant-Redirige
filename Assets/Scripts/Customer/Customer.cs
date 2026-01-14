@@ -12,7 +12,7 @@ public class Customer : MonoBehaviour
     [SerializeField] List<GameObject> orderComponentDisplays;
     [SerializeField] AudioSource orderCompleteAudioSource;
     [SerializeField] AudioSource orderWrongAudioSource;
-    [SerializeField] float orderDistanceThreshold = 5f;
+    [SerializeField] float orderDistanceThreshold = 4f;
 
     Transform target;
     bool orderGiven = false;
